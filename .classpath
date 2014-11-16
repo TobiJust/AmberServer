@@ -2,13 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/apache-mina-2.0.8/dist/mina-core-2.0.8.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/slf4j-1.7.7/slf4j-api-1.7.7.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/slf4j-1.7.7/slf4j-jdk14-1.7.7.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/sqlite-jdbc-3.8.7.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/javax.servlet-api-3.1.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/jetty-all-9.2.3.v20140905.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/json-parser/json-simple-1.1.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Tobias/Studium/Master/Semester 3/Telematikprojekt/workspace/libs/gcm/gcm-server-1.0.2.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/gcm-server-1.0.2.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/javax.servlet-api-3.1.0.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/jetty-all-9.2.3.v20140905.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/mina-core-2.0.8.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/slf4j-api-1.7.7.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/slf4j-jdk14-1.7.7.jar"/>
+	<classpathentry kind="lib" path="/Users/tobijust/git/AmberServer/libs/sqlite-jdbc-3.8.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
