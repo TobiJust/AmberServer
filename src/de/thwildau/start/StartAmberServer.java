@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import de.thwildau.gcm.SendNotification;
-import de.thwildau.server.AmberMinaServer;
-import de.thwildau.server.MinaServerHandler;
+import de.thwildau.server.AmberServer;
+import de.thwildau.server.AmberServerHandler;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
 import de.thwildau.webserver.AmberWebServer;
@@ -28,7 +28,7 @@ public class StartAmberServer {
 			e1.printStackTrace();
 		}
 				
-		AmberMinaServer.init();
+		AmberServer.init();
 		AmberWebServer.init();
 		
 		BufferedReader din = new BufferedReader(new InputStreamReader(System.in));
@@ -51,10 +51,11 @@ public class StartAmberServer {
 					restart();
 					break;
 				case "show user":
-					ServerLogger.log(AmberMinaServer.getDatabase().showAllUser(), true);
+					ServerLogger.log(AmberServer.getDatabase().showAllUser(), true);
 					break;
 				case "send":
 					new SendNotification();
+					ServerLogger.log(AmberServer.getDatabase().getGCMRegIds().toString(), true);
 					ServerLogger.log("Send Notification", true);
 					break;
 				}
@@ -68,15 +69,15 @@ public class StartAmberServer {
 	private static void restart(){
 		ServerLogger.log("Restarting serverthread...", true);
 		ServerLogger.log("Stopping serverthread...", true);
-		AmberMinaServer.getAcceptor().dispose();
-		MinaServerHandler.clearInstance();
-		AmberMinaServer.stop();
+		AmberServer.getAcceptor().dispose();
+		AmberServerHandler.clearInstance();
+		AmberServer.stop();
 		ServerLogger.stop(true);
-		AmberMinaServer.init();
+		AmberServer.init();
 	}
 
 	private static void shutdown(){
-		AmberMinaServer.getAcceptor().dispose();
+		AmberServer.getAcceptor().dispose();
 		ServerLogger.stop(true);
 		ServerPreferences.storeProperties();
 		quit = true;

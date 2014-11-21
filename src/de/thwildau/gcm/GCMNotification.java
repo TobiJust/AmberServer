@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,17 +17,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.android.gcm.server.InvalidRequestException;
-import com.google.android.gcm.server.Message;
-import com.google.android.gcm.server.MulticastResult;
-import com.google.android.gcm.server.Sender;
+import de.thwildau.gcm.google.Message;
+import de.thwildau.gcm.google.MulticastResult;
+import de.thwildau.gcm.google.Sender;
+import de.thwildau.server.AmberServer;
+import de.thwildau.util.Constants;
+import de.thwildau.util.ServerPreferences;
 
 @WebServlet("/send")
 public class GCMNotification extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	// Put your Google API Server Key here
-	private static final String GOOGLE_SERVER_KEY = "AIzaSyAQp7vpZDJaztlJmZLH6MYep7aQNGOW31k";
+	private static final String GOOGLE_SERVER_KEY = ServerPreferences.getProperty(Constants.API_KEY);
 	static final String MESSAGE_KEY = "message";
 	static final String REG_ID_STORE = "GCMRegId.txt";
 
@@ -63,9 +64,10 @@ public class GCMNotification extends HttpServlet {
 				Message message = new Message.Builder().timeToLive(30)
 						.delayWhileIdle(true).addData(MESSAGE_KEY, userMessage)
 						.build();
-				Set regIdSet = readFromFile();
-				List regIdList = new ArrayList();
-				regIdList.addAll(regIdSet);
+//				Set regIdSet = readFromFile();
+//				regIdList.addAll(regIdSet);
+				List<String> regIdList = AmberServer.getDatabase().getGCMRegIds();
+				
 				System.out.println("regId: " + regIdList);
 				System.out.println(message);			
 				response.setContentType("text/html");

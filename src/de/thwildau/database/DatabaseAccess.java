@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class DatabaseAccess {
@@ -79,11 +81,15 @@ public class DatabaseAccess {
 	 */
 	public boolean registerGCM(int user_id, String regid) {
 		int rows = 0;
-		String query = "insert into GCM (user_id, gcm_regid)values (?, ?)";
+//		String query = "insert into GCM (user_id, gcm_regid) values (?, ?)";
+		String query = "INSERT INTO GCM (user_id, gcm_regid) SELECT ?, ?"
+				+ "WHERE NOT EXISTS (SELECT 1 FROM GCM WHERE user_id = ? and gcm_regid = ?);";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, user_id);
 			preparedStatement.setString(2, regid);
+			preparedStatement.setInt(3, user_id);
+			preparedStatement.setString(4, regid);
 			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
@@ -93,11 +99,11 @@ public class DatabaseAccess {
 	}
 
 	/**
-	 * Add a registration id for mobile Devices.
+	 * Delete a registration id for mobile Devices.
 	 * 
 	 * @param username Username from Login
 	 * @param regid	GCM Registration ID
-	 * @return validation of GCM Registration
+	 * @return validation of GCM Unregistration
 	 */
 	public boolean unregisterGCM(String username) {
 		boolean unregister = false;
@@ -157,6 +163,25 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 		return result;
+	}
+
+	public List<String> getGCMRegIds(){
+		List<String> regIds = new ArrayList<String>();
+		try {
+			statement = connect.createStatement();
+			ResultSet rs = statement.executeQuery( "SELECT gcm_regid FROM GCM;" );
+			ResultSetMetaData rm = rs.getMetaData();
+			String colName = rm.getColumnName(1);
+			System.out.println(colName);
+			while (rs.next())
+				regIds.add(rs.getString(colName));
+
+			//			close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}		
+		return regIds;
+
 	}
 
 	private String writeResultSet(ResultSet resultSet) throws SQLException {

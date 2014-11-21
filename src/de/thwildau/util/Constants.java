@@ -19,7 +19,7 @@ public class Constants {
 	public static final String ARG_PORT = "p";
 	public static final String ARG_DEFAULT = "defaults";
 		
-	public static final String DATA_FOLDER = "data/";
+	public static final String DATA_FOLDER = "data/";	
 
 
 }

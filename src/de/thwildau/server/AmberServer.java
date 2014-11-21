@@ -15,7 +15,7 @@ import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
 
-public class AmberMinaServer{
+public class AmberServer{
 
 	private static NioSocketAcceptor acceptor;
 	private static DatabaseAccess database;
@@ -26,18 +26,20 @@ public class AmberMinaServer{
 	public static DatabaseAccess getDatabase() {
 		return database;
 	}
- 
+
 	public static void init(){
-	
+
 		acceptor = new NioSocketAcceptor();
-		acceptor.getFilterChain().addLast("codec",
-				new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
+		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new ServerCodecFactory()));
+//		acceptor.getFilterChain().addLast("protocol",
+//				new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
+		System.out.println(acceptor.getFilterChain().getAll());
 
 		try{
 			//Database Connection
 			database = new DatabaseAccess();
-			
-			acceptor.setHandler(MinaServerHandler.getInstance());
+
+			acceptor.setHandler(AmberServerHandler.getInstance());
 			acceptor.bind(new InetSocketAddress(Integer.parseInt(ServerPreferences.getProperty(Constants.PORT))));
 			ServerLogger.log("Server " + InetAddress.getLocalHost().getHostAddress() + " listening on port: "+ ServerPreferences.getProperty(Constants.PORT), true);
 		}
@@ -50,5 +52,5 @@ public class AmberMinaServer{
 		getDatabase().close();
 	}
 
-	
+
 }

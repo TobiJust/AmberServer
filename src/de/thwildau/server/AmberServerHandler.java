@@ -12,20 +12,20 @@ import de.thwildau.info.ClientMessage.Ident;
 import de.thwildau.model.User;
 import de.thwildau.util.ServerLogger;
 
-public class MinaServerHandler extends IoHandlerAdapter
+public class AmberServerHandler extends IoHandlerAdapter
 {
 
-	private static MinaServerHandler handler = null;
+	private static AmberServerHandler handler = null;
 	private ConcurrentHashMap<IoSession, String> sessions = new ConcurrentHashMap<IoSession, String>();
 
-	public static MinaServerHandler getInstance(){
+	public static AmberServerHandler getInstance(){
 		if(handler==null)
-			handler = new MinaServerHandler();
+			handler = new AmberServerHandler();
 		return handler;
 	}
 
 	public void sessionCreated(IoSession session) {
-		ServerLogger.log("Session created...", false);
+		ServerLogger.log("Session created..." + session, true);
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
 	}
 
@@ -45,9 +45,16 @@ public class MinaServerHandler extends IoHandlerAdapter
 	@Override
 	public void messageReceived( IoSession session, Object message ) throws Exception
 	{
+		ClientMessage receivedMessage = null;
+		if(message instanceof ClientMessage)
+			receivedMessage = (ClientMessage) message;
+		else if (message instanceof String){
+			System.out.println("Message: " + message);
+			return;
+		}
 
-		ClientMessage receivedMessage = (ClientMessage) message;
 		ServerLogger.log("received message from... " + session.getId(), true);
+		System.out.println(receivedMessage.getId());
 
 		switch(receivedMessage.getId()){
 		case TEXT_MESSAGE:
@@ -66,7 +73,7 @@ public class MinaServerHandler extends IoHandlerAdapter
 			String regID = ((User)receivedMessage.getContent()).getRegistationID();
 			boolean queryRegisterGCM;
 			// Database validation
-			int user_id = AmberMinaServer.getDatabase().login(usernameLogin, passLogin);
+			int user_id = AmberServer.getDatabase().login(usernameLogin, passLogin);
 			// TODO: Querys auswerten
 			// TODO: String constants
 			if(user_id == -1){
@@ -74,7 +81,7 @@ public class MinaServerHandler extends IoHandlerAdapter
 				ServerLogger.log("Login failed -->" + usernameLogin, true);
 			}
 			else{
-				queryRegisterGCM = AmberMinaServer.getDatabase().registerGCM(user_id, regID);
+				queryRegisterGCM = AmberServer.getDatabase().registerGCM(user_id, regID);
 				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, "Login succeeded");				
 				ServerLogger.log("Login from " + usernameLogin, true);
 			}
@@ -83,7 +90,7 @@ public class MinaServerHandler extends IoHandlerAdapter
 		case REGISTER:
 			String usernameRegister = ((User)receivedMessage.getContent()).getName();
 			byte[] passRegister = ((User)receivedMessage.getContent()).getPass();
-			boolean queryRegister = AmberMinaServer.getDatabase().addUser(usernameRegister, passRegister);
+			boolean queryRegister = AmberServer.getDatabase().addUser(usernameRegister, passRegister);
 			session.write(new ClientMessage(ClientMessage.Ident.REGISTER, queryRegister));
 			if(!queryRegister)
 				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, "Registration failed");
