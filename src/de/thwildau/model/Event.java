@@ -1,7 +1,5 @@
 package de.thwildau.model;
 
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -16,14 +14,33 @@ public class Event implements Serializable {
 	private String vehicleID;
 	private double lat;
 	private double lon;
-	private Image eventImage;
 
-	public Event(){
-		eventImage = Toolkit.getDefaultToolkit().getImage("/img/berlin.jpg");
+	public void setVehicleID(String id){
+		this.vehicleID = id;
 	}
 
-	public Image getEventImage() {
-		return eventImage;
+	public void setLatitude(double lat){
+		this.lat = lat;
+	}
+
+	public void setLongitude(double lon){
+		this.lon = lon;
+	}
+
+	public String getVehicleID(){
+		return this.vehicleID;
+	}
+
+	public double getLatitude(){
+		return this.lat;
+	}
+
+	public double getLongitude(){
+		return this.lon;
+	}
+
+	public Date getTimeStamp(){
+		return this.timeStamp;
 	}
 
 

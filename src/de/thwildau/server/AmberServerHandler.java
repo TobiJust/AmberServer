@@ -9,6 +9,7 @@ import org.apache.mina.core.session.IoSession;
 
 import de.thwildau.info.ClientMessage;
 import de.thwildau.info.ClientMessage.Ident;
+import de.thwildau.model.Event;
 import de.thwildau.model.User;
 import de.thwildau.util.ServerLogger;
 
@@ -99,6 +100,13 @@ public class AmberServerHandler extends IoHandlerAdapter
 			}
 			ServerLogger.log("Register from " + session.getRemoteAddress().toString(), true);
 			session.write(responseMessage);
+			break;
+		case EVENT_REQUEST:
+			String eventID = (String) receivedMessage.getContent();
+			Event ev = new Event();
+			ev.setVehicleID(eventID);
+			session.write(new ClientMessage(ClientMessage.Ident.EVENT, ev));
+			
 			break;
 		default:
 			break;
