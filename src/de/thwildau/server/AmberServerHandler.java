@@ -11,6 +11,7 @@ import de.thwildau.info.ClientMessage;
 import de.thwildau.info.ClientMessage.Ident;
 import de.thwildau.model.Event;
 import de.thwildau.model.User;
+import de.thwildau.model.UserData;
 import de.thwildau.util.ServerLogger;
 
 public class AmberServerHandler extends IoHandlerAdapter
@@ -83,7 +84,9 @@ public class AmberServerHandler extends IoHandlerAdapter
 			}
 			else{
 				queryRegisterGCM = AmberServer.getDatabase().registerGCM(user_id, regID);
-				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, "Login succeeded");				
+				UserData response = new UserData();
+				response = response.prepareUserData(user_id);
+				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);				
 				ServerLogger.log("Login from " + usernameLogin, true);
 			}
 			session.write(responseMessage);

@@ -49,7 +49,7 @@ public class AmberServer{
 	}
 
 	public static void stop(){
-		getDatabase().close();
+		getDatabase().close(null);
 	}
 
 

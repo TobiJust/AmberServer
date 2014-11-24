@@ -20,4 +20,5 @@ public class User implements Serializable{
 	public String getRegistationID(){
 		return this.regID;
 	}
+	
 }

@@ -11,7 +11,7 @@ public class SendNotification {
 	{
 		try
 		{
-			String myUrl = "http://amber-project.no-ip.org:3001/send?message=test";
+			String myUrl = "http://10.220.3.158:3001/send?message=Chrissi_stinkt";
 			// if your url can contain weird characters you will want to 
 			// encode it here, something like this:
 			// myUrl = URLEncoder.encode(myUrl, "UTF-8");

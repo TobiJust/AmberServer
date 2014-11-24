@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import de.thwildau.gcm.SendNotification;
+import de.thwildau.model.UserData;
 import de.thwildau.server.AmberServer;
 import de.thwildau.server.AmberServerHandler;
 import de.thwildau.util.ServerLogger;
@@ -30,6 +31,8 @@ public class StartAmberServer {
 				
 		AmberServer.init();
 		AmberWebServer.init();
+		
+		System.out.println(new UserData().prepareUserData(8));
 		
 		BufferedReader din = new BufferedReader(new InputStreamReader(System.in));
 		while(!quit){

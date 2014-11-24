@@ -1,5 +1,8 @@
 package de.thwildau.database;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,6 +13,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
 
 public class DatabaseAccess {
 
@@ -17,7 +22,6 @@ public class DatabaseAccess {
 	private Connection connect = null;
 	private Statement statement = null;
 	private PreparedStatement preparedStatement = null;
-	private ResultSet resultSet = null;
 
 	/**
 	 * Grant access to SQLite Database
@@ -35,7 +39,7 @@ public class DatabaseAccess {
 			public void run() { 
 				try { 
 					if (!connect.isClosed() && connect != null) { 
-						close(); 
+						close(null); 
 						if (connect.isClosed()) 
 							System.out.println("Connection to Database closed"); 
 					} 
@@ -81,7 +85,7 @@ public class DatabaseAccess {
 	 */
 	public boolean registerGCM(int user_id, String regid) {
 		int rows = 0;
-//		String query = "insert into GCM (user_id, gcm_regid) values (?, ?)";
+		//		String query = "insert into GCM (user_id, gcm_regid) values (?, ?)";
 		String query = "INSERT INTO GCM (user_id, gcm_regid) SELECT ?, ?"
 				+ "WHERE NOT EXISTS (SELECT 1 FROM GCM WHERE user_id = ? and gcm_regid = ?);";
 		try {
@@ -145,26 +149,29 @@ public class DatabaseAccess {
 		return (rows > 0) ? true : false;
 	}
 
-	private ResultSet getGeneratedKeys() throws SQLException {
-		PreparedStatement getGeneratedKeys = null;
-		if (getGeneratedKeys == null) getGeneratedKeys = connect.prepareStatement(
-				"select last_insert_rowid();");
-		return getGeneratedKeys.executeQuery();
-	}
-
+	/**
+	 * Execute Query to show all current User.
+	 * 
+	 * @return List of all User.
+	 */
 	public String showAllUser(){
 		String result = "\n";
 		try {
 			statement = connect.createStatement();
 			ResultSet rs = statement.executeQuery( "SELECT * FROM USER;" );
 			result += writeResultSet(rs);
-			close();
+			close(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return result;
 	}
 
+	/**
+	 * Get GCM Registration Ids.
+	 * 
+	 * @return List of all Registration Ids.
+	 */
 	public List<String> getGCMRegIds(){
 		List<String> regIds = new ArrayList<String>();
 		try {
@@ -172,7 +179,7 @@ public class DatabaseAccess {
 			ResultSet rs = statement.executeQuery( "SELECT gcm_regid FROM GCM;" );
 			ResultSetMetaData rm = rs.getMetaData();
 			String colName = rm.getColumnName(1);
-			System.out.println(colName);
+
 			while (rs.next())
 				regIds.add(rs.getString(colName));
 
@@ -181,9 +188,109 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}		
 		return regIds;
-
 	}
 
+	public ArrayList<Integer> getVehicles(int userID){
+		ArrayList<Integer> vehicle_ids = new ArrayList<Integer>();
+		String query = "SELECT Vehicle_id FROM VehiclePerUser WHERE user_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, userID);
+			ResultSet rs = preparedStatement.executeQuery();
+			while(rs.next())
+				vehicle_ids.add(rs.getInt(1));
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return vehicle_ids;
+	}
+
+	public Object[] getEvents(int vehicleID){
+		Object[] data = new Object[2];
+		ArrayList<Integer> ride_ids = new ArrayList<Integer>();
+		String name = "";
+		String query1 = "SELECT Event_id FROM EventPerVehicle WHERE vehicle_id=?";
+		String query2 = "SELECT Vehicle_Name FROM Vehicle WHERE vehicle_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query1);
+			preparedStatement.setInt(1, vehicleID);
+			ResultSet rs1 = preparedStatement.executeQuery();
+			while(rs1.next())
+				ride_ids.add(rs1.getInt(1));
+			preparedStatement.close();
+
+			preparedStatement = connect.prepareStatement(query2);
+			preparedStatement.setInt(1, vehicleID);
+			ResultSet rs2 = preparedStatement.executeQuery();
+			while(rs2.next())
+				name = rs2.getString(1);
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		data[0] = name;
+		data[1] = ride_ids;
+		return data;
+	}
+
+	//	public ArrayList<Integer> getEvents(int rideID){
+	//		ArrayList<Integer> event_ids = new ArrayList<Integer>();
+	//		String query = "SELECT Event_id FROM EventPerRide WHERE ride_id=?";
+	//		try {
+	//			preparedStatement = connect.prepareStatement(query);
+	//			preparedStatement.setInt(1, rideID);
+	//			ResultSet rs = preparedStatement.executeQuery();
+	//			while(rs.next())
+	//				event_ids.add(rs.getInt(1));
+	//			preparedStatement.close();
+	//		} catch (SQLException e) {
+	//			e.printStackTrace();
+	//		} 
+	//		return event_ids;
+	//	}
+
+	public Object[] getEventData(int eventID){
+		Object[] eventData = null;
+		String query = "SELECT * FROM Event WHERE event_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, eventID);
+			ResultSet rs = preparedStatement.executeQuery();
+
+			ResultSetMetaData rm = rs.getMetaData();
+			eventData = new Object[rm.getColumnCount()];
+			while(rs.next()){
+				int i;
+				for(i = 0; i < eventData.length-1; i++)
+					eventData[i] = rs.getObject(i+1);
+				try {
+					BufferedImage image = ImageIO.read(rs.getBinaryStream(eventData.length));
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					ImageIO.write(image, "jpg", baos);
+					baos.flush();
+					byte[] imageInByte = baos.toByteArray();
+					baos.close();
+					eventData[i] = imageInByte;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return eventData;
+	}
+
+	/**
+	 * Prints a readable Output.
+	 * 
+	 * @param resultSet
+	 * @return String output of a Result Set.
+	 * @throws SQLException
+	 */
 	private String writeResultSet(ResultSet resultSet) throws SQLException {
 		String result = "";
 		ResultSetMetaData rm = resultSet.getMetaData();
@@ -203,7 +310,7 @@ public class DatabaseAccess {
 	}
 
 	// you need to close all three to make sure
-	public void close() {
+	public void close(ResultSet resultSet) {
 		try {
 			if(resultSet != null) resultSet.close();
 			if(statement != null) statement.close();
