@@ -1,4 +1,4 @@
-package de.thwildau.server;
+package de.thwildau.util;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
@@ -21,8 +21,6 @@ public class ServerRequestDecoder extends CumulativeProtocolDecoder {
 
 		in.setAutoExpand(true);
 		in.setAutoShrink(true);
-
-		System.out.println(in.remaining());
 
 		//		if (in.remaining() >= 12) {
 		try{

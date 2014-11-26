@@ -1,6 +1,10 @@
 package de.thwildau.server;
 
 
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
@@ -19,8 +23,12 @@ public class AmberServerHandler extends IoHandlerAdapter
 {
 
 	private static final boolean DEBUG = true;
+	private static final int TIMEOUT = 5 * 60 * 1000;
+	
 	private static AmberServerHandler handler = null;
 	private ConcurrentHashMap<IoSession, String> sessions = new ConcurrentHashMap<IoSession, String>();
+	private ConcurrentHashMap<Integer, TimerTask> timers = new ConcurrentHashMap<Integer, TimerTask>();
+	private TimerTask task;
 
 	public static AmberServerHandler getInstance(){
 		if(handler==null)
@@ -30,10 +38,13 @@ public class AmberServerHandler extends IoHandlerAdapter
 
 	public void sessionCreated(IoSession session) {
 		ServerLogger.log("Session created..." + session, DEBUG);
-		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
+		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
+		if(session.getAttribute("user") != null){
+			setTimeout((int) session.getAttribute("user"));
+		}
 		ServerLogger.log("Session closed...", DEBUG);
 	}
 
@@ -62,10 +73,16 @@ public class AmberServerHandler extends IoHandlerAdapter
 
 		//
 		switch(receivedMessage.getId()){
-		case TEXT_MESSAGE:
+		case LOGIN_CHECK:
 			try{
 				//				lock.lock();
-				System.out.println(new ClientMessage(Ident.TEXT_MESSAGE, sessions.get(session) +": "+(String)receivedMessage.getContent()));
+				int user_id = (int)receivedMessage.getContent();
+				boolean isOnline = AmberServer.getDatabase().checkOnline(user_id);
+				if(isOnline){
+					session.setAttribute("user", user_id);
+					cancelTimeout(user_id);
+				}
+				session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, isOnline));
 			}
 			finally{
 				//				lock.unlock();
@@ -85,19 +102,20 @@ public class AmberServerHandler extends IoHandlerAdapter
 			}
 			// Check for GCM Registration
 			else{
-				boolean queryRegisterGCM = AmberServer.getDatabase().registerGCM(user_id, regID);
-				// GCM Registration failed
-				if(!queryRegisterGCM){
-					responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_GCM);					
-					ServerLogger.log("GCM failed: " + usernameLogin, DEBUG);
-				}	
-				// Everything ok - Login succeeded
-				else{
-					UserData response = new UserData();
-					response = response.prepareUserData(user_id);
-					responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);				
-					ServerLogger.log("Login success: " + usernameLogin, DEBUG);
-				}
+				//				// GCM Registration failed
+				//				if(!queryRegisterGCM){
+				//					responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_GCM);					
+				//					ServerLogger.log("GCM failed: " + usernameLogin, DEBUG);
+				//				}	
+				//				// Everything ok - Login succeeded
+				//				else{
+				AmberServer.getDatabase().registerGCM(user_id, regID);
+				UserData response = new UserData();
+				response = response.prepareUserData(user_id);
+				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);
+				session.setAttribute("user", user_id);
+				ServerLogger.log("Login success: " + usernameLogin, DEBUG);
+				//			}
 			}
 			session.write(responseMessage);
 			break;
@@ -149,5 +167,24 @@ public class AmberServerHandler extends IoHandlerAdapter
 	}
 	public static void clearInstance(){
 		handler = null;
+	}
+
+	public void setTimeout(int user_id){
+		ServerLogger.log("Set Timeout Countdown to 5 min for User " + user_id, DEBUG);
+		Timer timer = new Timer();
+		task = new TimerTask() {			
+			@Override
+			public void run() {
+				ServerLogger.log("Logout for User " + user_id, DEBUG);
+				AmberServer.getDatabase().logout(user_id);
+			}
+		};
+		// Logout in 5 minutes
+		timer.schedule(task, TIMEOUT);
+		timers.put(user_id, task);
+	}
+	public void cancelTimeout(int user_id){
+		timers.get(user_id).cancel();
+//		setTimeout(user_id);
 	}
 }

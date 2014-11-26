@@ -1,6 +1,7 @@
 package de.thwildau.webserver;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -28,16 +29,17 @@ public class AmberWebServerHandler extends AbstractHandler{
 
 	public void handle(String target,Request baseRequest,HttpServletRequest request,HttpServletResponse response)
 			throws IOException, ServletException{
+		
+		// allow cross origin
+		response.addHeader("Access-Control-Allow-Origin", "*");
 		try{
 			String requestIdent = request.getPathInfo();
-
 			switch(requestIdent){
 			case "/login":
 				String loginData = request.getParameter("data");
 				String usernameLogin = parseLoginRequest(loginData)[0];
 				//TODO: get hash value from Web App
 				byte[] passLogin = passwordToHash(parseLoginRequest(loginData)[1]);
-				System.out.println(usernameLogin +" " + passLogin);
 				// Database validation
 				// Check for User and Password
 				int user_id = AmberServer.getDatabase().login(usernameLogin, passLogin);
@@ -49,19 +51,22 @@ public class AmberWebServerHandler extends AbstractHandler{
 				else{
 					UserData responseData = new UserData();
 					responseData = responseData.prepareUserData(user_id);
-					response.sendError(200, JSONResponse(responseData));
+					response.setHeader("Content-Type", "text/plain");
+				    PrintWriter writer = response.getWriter();
+				    writer.write(convertToJSON(responseData));
+				    writer.close();
 					ServerLogger.log("Login from Web App succeeded: " + usernameLogin, DEBUG);
 				}
-				response.setStatus(200, "Login successful");
-				//				response.sendError(200, "Login successful");
 				break;
-			case "/register":
-				ServerLogger.log("Register from Web App succeeded", DEBUG);
+			case "/logout":
+				
+				ServerLogger.log("Logout from Web App succeeded", DEBUG);
 				break;
 			case "/requestDataPackage":
 				ServerLogger.log("Request from Web App", DEBUG);
 				break;
 			default:
+				// No Access to those websites
 				response.sendError(404);				
 				break;
 			}
@@ -103,14 +108,6 @@ public class AmberWebServerHandler extends AbstractHandler{
 			e.printStackTrace();
 		}
 		return login;
-	}
-
-	private String JSONResponse(Object responseData){
-		JSONObject obj = new JSONObject();
-		if(responseData instanceof UserData){
-			obj.put("data",(convertToJSON(responseData)));
-		}
-		return obj.toJSONString();			
 	}
 	private String convertToJSON(Object responseData){
 		ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();

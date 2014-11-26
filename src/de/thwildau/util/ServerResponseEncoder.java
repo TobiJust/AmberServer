@@ -1,4 +1,4 @@
-package de.thwildau.server;
+package de.thwildau.util;
 
 import java.io.NotSerializableException;
 import java.io.Serializable;
@@ -20,9 +20,6 @@ public class ServerResponseEncoder extends ProtocolEncoderAdapter {
 		if (!(message instanceof Serializable)) {
 			throw new NotSerializableException();
 		}
-		System.out.println("Message");
-		System.out.println(message.toString().length());
-
 		
 		IoBuffer buf = IoBuffer.allocate(128);
 		buf.setAutoExpand(true);
@@ -38,7 +35,6 @@ public class ServerResponseEncoder extends ProtocolEncoderAdapter {
 
 		buf.flip();
 		out.write(buf);
-		System.out.println(buf);
 	}
 
 	/**

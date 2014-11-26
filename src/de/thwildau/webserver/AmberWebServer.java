@@ -36,8 +36,6 @@ public class AmberWebServer
 			context.setContextPath("/");
 			server.setHandler(context);
 
-			context.addServlet(new ServletHolder(new AmberServlet("Buongiorno Mondo")),"/it/*");
-			context.addServlet(new ServletHolder(new LoginServlet()),"/login");
 			context.addServlet(new ServletHolder(new GCMNotification()),"/send");
 
 			ResourceHandler resource_handler = new ResourceHandler();

@@ -60,13 +60,19 @@ public class DatabaseAccess {
 	public int login(String username, byte[] pass) {
 		int user_id = -1;
 		String query = "SELECT user_id FROM user WHERE user_name=? AND user_pw=?";
+		String query2 = "INSERT INTO session (user_id, time_stamp) values (?, ?)";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setString(1, username);
 			preparedStatement.setBytes(2, pass);
 			ResultSet rs = preparedStatement.executeQuery();
-			if(rs.next())
+			if(rs.next()){
 				user_id = rs.getInt(1);
+				preparedStatement = connect.prepareStatement(query2);
+				preparedStatement.setInt(1, user_id);
+				preparedStatement.setLong(2, System.currentTimeMillis());
+				preparedStatement.executeUpdate();
+			}
 			else
 				user_id = -1;
 			preparedStatement.close();
@@ -76,6 +82,47 @@ public class DatabaseAccess {
 		return user_id;
 	}
 
+	public void updateSession(int user_id){
+		String query = "UPDATE session SET time_stamp=? WHERE user_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setLong(1, System.currentTimeMillis());
+			preparedStatement.setInt(2, user_id);
+			preparedStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+	}
+
+	public void logout(int user_id) {
+		String query = "DELETE FROM session WHERE user_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, user_id);
+			preparedStatement.executeUpdate();
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public boolean checkOnline(int user_id){
+		boolean isOnline = false;
+		String query = "SELECT COUNT(*) FROM session WHERE user_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, user_id);
+			ResultSet rs = preparedStatement.executeQuery();
+			if(rs.getInt(1) > 0){
+				isOnline = true;
+				updateSession(user_id);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return isOnline;
+	}
 	/**
 	 * Add a registration id for mobile Devices.
 	 * 
@@ -83,8 +130,7 @@ public class DatabaseAccess {
 	 * @param regid	GCM Registration ID
 	 * @return validation of GCM Registration
 	 */
-	public boolean registerGCM(int user_id, String regid) {
-		int rows = 0;
+	public void registerGCM(int user_id, String regid) {
 		//		String query = "insert into GCM (user_id, gcm_regid) values (?, ?)";
 		String query = "INSERT INTO GCM (user_id, gcm_regid) SELECT ?, ?"
 				+ "WHERE NOT EXISTS (SELECT 1 FROM GCM WHERE user_id = ? and gcm_regid = ?);";
@@ -94,12 +140,11 @@ public class DatabaseAccess {
 			preparedStatement.setString(2, regid);
 			preparedStatement.setInt(3, user_id);
 			preparedStatement.setString(4, regid);
-			rows = preparedStatement.executeUpdate();
+			preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 
-		return (rows > 0) ? true : false;
 	}
 
 	/**

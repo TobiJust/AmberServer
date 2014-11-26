@@ -1,4 +1,4 @@
-package de.thwildau.server;
+package de.thwildau.util;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;

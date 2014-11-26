@@ -12,6 +12,7 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 
 import de.thwildau.database.DatabaseAccess;
 import de.thwildau.util.Constants;
+import de.thwildau.util.ServerCodecFactory;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
 
@@ -33,7 +34,6 @@ public class AmberServer{
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new ServerCodecFactory()));
 //		acceptor.getFilterChain().addLast("protocol",
 //				new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
-		System.out.println(acceptor.getFilterChain().getAll());
 
 		try{
 			//Database Connection
