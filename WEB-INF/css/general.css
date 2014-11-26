@@ -1,0 +1,177 @@
+html {
+	font-family: "Segoe UI";
+	color: #e0e0e0;
+/* 	overflow: hidden; */
+}
+
+body {
+	background-image: url("../pics/backblack.jpg");
+}
+
+header.banner {
+	z-index: 10;
+	position: fixed;
+	width: 100%;
+	left: 0;
+	top: 5%;
+	background-color: #595959;
+	border-bottom: 3px solid #ffcc33;
+	height: 5%;
+}
+
+.ridedata {
+	position: fixed;
+	text-align: center;
+	left: 50%;
+	margin-left: -25%;
+	top: 10%;
+	background: #080808;
+	border: 5px solid #ffcc33;
+	border-top: 1px solid #ffcc33;
+	border-bottom-left-radius: 15px;
+	border-bottom-right-radius: 15px;
+	width: 50%;
+	height: 5%;
+}
+
+div.center {
+	z-index: 9;
+	position: absolute;
+	left: 0;
+	top: 10%;
+	height: 75%;
+	width: 100%;
+}
+
+footer.bottommenu {
+	position: fixed;
+	z-index: 11;
+	width: 100%;
+	left: 0;
+	bottom: 0%;
+	background-color: #595959;
+	border-top: 3px solid #ffcc33;
+	height: 15%;
+}
+
+.ambertypo {
+	position: absolute;
+	z-index: 15;
+	height: 80px; 
+	width: 230px;
+	top: 40%;
+	margin-top: -40px;
+	margin-left: 2%;
+}
+
+.ambericon {
+	position: absolute;
+	margin-top: 20px;
+	height: 80px;
+	width: 80px;
+	background-image: url("../pics/amber.png");
+	background-size: 65px 65px;
+	background-position: 0 4px;
+	background-repeat: no-repeat;
+}
+
+.ambertypo>.a {
+/* 	text-shadow: 0 0 0.2em #ffcc33; */
+	margin-top: 0px;
+	margin-left: 70px;
+}
+
+.ambertypo>.mber {
+	margin-left: 120px;
+	margin-top: 11px;
+}
+
+.bottompanel {
+	z-index: 10;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: #595959;
+}
+
+.driveout {
+	background: #080808;
+	position: fixed;
+	z-index: 12;
+	margin-top: -150px;
+	left: 35%;
+	margin-left: -150px;
+	width: 250px;
+	height: 250px;
+	border: 12px solid #404040;
+	border-radius: 190px;
+	overflow: hidden;
+}
+
+.drivein {
+	width: 95%;
+	height: 95%;
+	border: 7px solid #ffcc33;
+	border-radius: 175px;
+	overflow: hidden;
+}
+
+.tachoout {
+	background: #080808;
+	position: fixed;
+	z-index: 12;
+	margin-top: -150px;
+	left: 50%;
+	margin-left: -150px;
+	width: 300px;
+	height: 300px;
+	border: 12px solid #404040;
+	border-radius: 190px;
+	overflow: hidden;
+}
+
+.tachoin {
+	width: 95%;
+	height: 95%;
+	border: 7px solid #ffcc33;
+	border-radius: 175px;
+	overflow: hidden;
+}
+
+.mapout {
+	background: #080808;
+	position: fixed;
+	left: 93%;
+	top: 10%;
+	margin-top: -125px;
+	margin-left: -125px;
+	z-index: 12;
+	width: 250px;
+	height: 250px;
+	border: 5px solid #ffcc33;
+	border-radius: 135px;
+	float: right;
+	overflow: hidden;
+}
+
+.motorcontrolout {
+	background: #080808;
+	position: fixed;
+	left: 60%;
+	margin-top: -150px;
+	z-index: 11;
+	width: 400px;
+	height: 230px;
+	border: 12px solid #404040;
+	border-radius: 12px;
+	float: right;
+	overflow: hidden;
+}
+
+.motorcontrolin {
+	width: 96%;
+	height: 93%;
+	border: 8px solid #ffcc33;
+	border-radius: 1px;
+	text-align: center;
+}

@@ -1,15 +1,18 @@
 package de.thwildau.webserver;
 
 import java.net.InetAddress;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 import de.thwildau.database.DatabaseAccess;
 import de.thwildau.gcm.GCMNotification;
+import de.thwildau.server.AmberServerHandler;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
@@ -37,8 +40,18 @@ public class AmberWebServer
 			context.addServlet(new ServletHolder(new LoginServlet()),"/login");
 			context.addServlet(new ServletHolder(new GCMNotification()),"/send");
 
+			ResourceHandler resource_handler = new ResourceHandler();
+			resource_handler.setDirectoriesListed(false);
+			resource_handler.setResourceBase("WEB-INF");
+			resource_handler.setWelcomeFiles(new String[]{"index.html" });
+			resource_handler.setHandler(new AmberWebServerHandler());
+
+			HandlerList handlers = new HandlerList();
+			handlers.setHandlers(new Handler[] { resource_handler});
+			server.setHandler(handlers);
+
 			server.start();
-//			server.join();
+			//			server.join();
 
 		} catch (Exception e) {
 			e.printStackTrace();

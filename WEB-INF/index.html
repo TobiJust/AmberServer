@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Amber Control Panel</title>
+<link rel="shortcut icon" href="pics/amber_gr.png" type="image/x-icon" />
+<script type="text/javascript" src="http://www.openlayers.org/api/OpenLayers.js"></script>
+<script type="text/javascript" src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+<link rel="stylesheet" type="text/css" href="css/general.css">
+<link rel="stylesheet" type="text/css" href="css/armatures.css">
+<link rel="stylesheet" type="text/css" href="css/login.css">
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/fx.js"></script>
+<script type="text/javascript" src="js/amber.js"></script>
+<script type="text/javascript" src="js/osmutils.js"></script>
+<script type="text/javascript" src="js/dummyshit.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+// 	$('.loginfade, .loginbody, .loginmaterial').toggle()
+	amber.locals.drawMap();
+});
+</script>
+</head>
+<body>
+	<div class="loginfade"></div>
+	<div class="loginmaterial"></div>
+	<div class="loginbody">
+		<div class="a">A</div><div class="mber">MBER</div>
+		<div class="loginsepline"></div>
+		<div class="loginrow">
+			<p class="welcome">WILLKOMMEN BEI AMBER</p>
+			<p class="info">status login...</p>
+		</div>
+		<div class="loginrow">
+			<div class="label">EMAIL</div><input class="loginfield" type="email">
+		</div>
+		<div class="loginrow">
+			<div class="label">PASSWORT</div><input class="loginfield" type="password">
+		</div>
+		<div class="loginrow">
+			<button class="loginsubmit">ANMELDEN</button>
+		</div>
+	</div>
+			<!-- MAIN APP MARKUP BEGINS HERE -->
+	<header class="banner">
+		<div class="ridedata">
+			<div class="ridelabel">km Gesamt:</div>
+			<div class="ridelabel target_kmall">1.000.000</div>
+			<div class="ridelabel">km seit Motorstart:</div>
+			<div class="ridelabel target_km">500</div>
+			<div class="fuellabel"></div>
+			<div class="fuelout">
+				<div class="fuelin"></div>
+			</div>
+		</div>
+		<div class="mapout">
+			<div id="map">
+			</div>
+		</div>
+	</header>
+	<div class="center">
+	
+	</div>
+	<footer class="bottommenu">
+		<div class="ambertypo">
+			<div class="ambericon"></div>
+			<div class="a">A</div><div class="mber">MBER</div>
+		</div>
+		<div class="bottompanel"></div>
+		<div class="driveout">
+			<div class="drivein">
+				<div id="drive">
+					<div class="armabox">
+						<p class="armalabel drivetarget">0</p>
+						<p class="unitlabel">u/min</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="tachoout">
+			<div class="tachoin">
+				<div id="tacho">
+					<div class="armabox">
+						<p class="armalabel tachotarget">0</p>
+						<p class="unitlabel">km/h</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="motorcontrolout">
+			<div class="motorcontrolin">
+				<div id="motorcontrol">
+					<div class="controlelement airflow" title="Luftdurchfluss">
+						<p class="controllabel target_airflow">000000000</p>	
+						<p class="controlunit">(g/s)</p>
+					</div>
+					<div class="controlelement airpress" title="Luftdruck im Einlasskanal">
+						<p class="controllabel target_airpress">000000000</p>
+						<p class="controlunit">(kPa)</p>
+					</div>
+					<div class="controlelement airtemp" title="Ansaugluft Temperatur">
+						<p class="controllabel target_airtemp">000000000</p>
+						<p class="controlunit">(°C)</p>
+					</div>
+					<div class="controlelement coolingliq" title="Kühlflüssigkeit Temperatur">
+						<p class="controllabel target_coolingliq">000000000</p>
+						<p class="controlunit">(°C)</p>
+					</div>
+					<div class="controlelement fuelpress" title="Kraftstoffdruck">
+						<p class="controllabel target_fuelpress">000000000</p>
+						<p class="controlunit">(kPa)</p>
+					</div>
+					<div class="controlelement enviropress" title="Barometrischer Luftdruck">
+						<p class="controllabel target_enviropress">000000000</p>
+						<p class="controlunit">(kPa)</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</footer>
+</body>
+</html>

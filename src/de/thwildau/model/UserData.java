@@ -1,14 +1,7 @@
 package de.thwildau.model;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
 
 import de.thwildau.server.AmberServer;
 
@@ -28,12 +21,8 @@ public class UserData implements Serializable{
 			Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
 			ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 			Vehicle vehicle = new Vehicle((String)vehicleData[0]);
-			System.out.println((String)vehicleData[0]);
 			for(int eventID : eventIDList){
 				Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
-				System.out.println(eventData[0] + " " +eventData[1] +
-						" " + eventData[2] + " " + eventData[3] +
-						" " + eventData[4] + " " +eventData[5]);
 				String eventType = (String)eventData[1];
 				String eventTime = (String)eventData[2];
 				double eventLat = (double)eventData[3];
@@ -49,17 +38,6 @@ public class UserData implements Serializable{
 			this.vehicleList.add(vehicle);
 		}
 		return this;
-	}
-
-	private byte[] writeObject(BufferedImage image) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ImageIO.write(image, "jpg", baos);
-		baos.flush();
-		byte[] imageInByte = baos.toByteArray();
-		baos.close();
-		
-		return imageInByte;
-
 	}
 
 	public ArrayList<Vehicle> getVehicles(){

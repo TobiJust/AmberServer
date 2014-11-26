@@ -1,0 +1,155 @@
+.loginfade {
+	position: fixed;
+	z-Index: 20;
+	opacity: 0.9;
+	background-color: #000000;
+	height: 100%;
+	width: 100%;
+	top: 0;
+	left: 0;
+}
+
+.loginmaterial, .loginbody {
+	position: absolute; 
+	background-image: url("../pics/blackalu.jpg");
+	border-radius: 8px;
+	width: 500px;
+	height: 400px;
+	left: 50%;
+	top: 50%;
+	margin-left: -250px;
+	margin-top: -200px;
+	z-Index: 21
+}
+
+.loginbody {
+	color: inherit;
+	letter-spacing: 3px;
+	position: absolute;
+	overflow: hidden;
+	background-image: url("../pics/amber.png");
+	background-size: 60px 60px;
+	background-repeat: no-repeat;
+	background-position: 5px 5px;
+	z-index: 22;
+	border-radius: 0;
+}
+
+.loginmaterial {
+	border: 3px solid #ffcc33;
+}
+
+.loginrow {
+	margin-left: 20px;
+	margin-top: 20px;
+	width: 100%;
+}
+
+.loginsepline {
+	position: absolute;
+	box-shadow: 0px 0px 25px 2px #ffcc33;
+	height: 3px;
+	width: 370px;
+	margin-left: 122px;
+	margin-top: 391px;
+	background: #ffcc33;
+}
+
+div.a, div.mber {
+	cursor: default;
+	-webkit-user-select: none;  /* Chrome all / Safari all */
+	-moz-user-select: none;     /* Firefox all */
+	-ms-user-select: none;      /* IE 10+ */
+}
+
+div.a {
+	position: absolute;
+	font-size: 80px;
+	height: 80px;
+	width: 110px;
+	color: #ffcc33;
+	margin-top: 307px;
+	margin-left: 79px;
+	font-weight: 100;
+}
+
+.loginbody>.a {
+	text-shadow: 0 0 30px #ffcc33, 
+				 0 0 30px #ffcc33;
+}
+
+div.mber {
+	position: absolute;
+	font-size: 58px;
+	height: 60px;
+	width: 100px;
+	margin-top: 318px;
+	margin-left: 128px;
+	letter-spacing: 4px;
+	font-weight: 100;
+}
+
+.welcome, .info {
+	margin-top: 50px;
+	margin-left: -31px;
+	margin-bottom: 60px;
+	text-align: center;
+	vertical-align: middle;
+	border-bottom: 1px solid #ffcc33;
+}
+
+.info {
+	font-size: 14px;
+	margin-top: -60px;
+	border: none;
+}
+
+.label {
+	margin-left: 20px;
+	position: absolute;
+	min-width: 150px;
+	display: inline;
+}
+
+input.loginfield {
+	border: none;
+	border-style: none;
+	margin-left: 150px;;
+	width: 250px;
+	background-color: transparent;
+	border-bottom: 1px solid #e0e0e0;
+	color: inherit;
+	font-size: 15px;
+	font-family: inherit;
+	padding-left: 5px;
+} 
+
+button.loginsubmit {
+	transition: background-color 200ms;
+	border-style: none;
+	border: 1px solid #e0e0e0;
+	color: inherit;
+	background-color: transparent;
+	font-family: inherit;
+	letter-spacing: 2px;
+	height: 30px;
+	width: 170px;
+	margin-left: 150px;
+	margin-top: 20px;
+	cursor: pointer;
+}
+
+input.loginfield:focus {
+	outline: none;
+	border-bottom-color: #ffcc33;
+}
+
+button.loginsubmit:focus, 
+button.loginsubmit:hover {
+	outline: none;
+	border-color: #ffcc33;
+}
+
+button:active {
+	background-color: #ffcc33;
+}

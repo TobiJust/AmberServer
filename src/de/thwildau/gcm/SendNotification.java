@@ -3,20 +3,28 @@ package de.thwildau.gcm;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
+
+import de.thwildau.util.Constants;
+import de.thwildau.util.ServerPreferences;
 
 public class SendNotification {
 
-	public SendNotification()
+	public SendNotification(String message)
 	{
 		try
 		{
-			String myUrl = "http://10.220.3.158:3001/send?message=Chrissi_stinkt";
-			// if your url can contain weird characters you will want to 
-			// encode it here, something like this:
-			// myUrl = URLEncoder.encode(myUrl, "UTF-8");
+			String myUrl = "http://"+InetAddress.getLocalHost().getHostAddress()+":"+
+					ServerPreferences.getProperty(Constants.WEB_PORT) +"/" +
+					Constants.ARG_GCM_SEND + "?" +
+					Constants.ARG_MESSAGE + "=" +
+					message;
+					// if your url can contain weird characters you will want to 
+					// encode it here, something like this:
+					// myUrl = URLEncoder.encode(myUrl, "UTF-8");
 
-			doHttpUrlConnectionAction(myUrl);
+					doHttpUrlConnectionAction(myUrl);
 		}
 		catch (Exception e)
 		{

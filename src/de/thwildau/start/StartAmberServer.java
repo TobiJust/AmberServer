@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import de.thwildau.gcm.SendNotification;
-import de.thwildau.model.UserData;
 import de.thwildau.server.AmberServer;
 import de.thwildau.server.AmberServerHandler;
 import de.thwildau.util.ServerLogger;
@@ -19,7 +18,7 @@ public class StartAmberServer {
 	private static String[] arguments;
 
 	public static void main(String[] args){
-				
+
 		arguments = args;		
 
 		try {
@@ -28,12 +27,10 @@ public class StartAmberServer {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-				
+
 		AmberServer.init();
 		AmberWebServer.init();
-		
-		System.out.println(new UserData().prepareUserData(8));
-		
+
 		BufferedReader din = new BufferedReader(new InputStreamReader(System.in));
 		while(!quit){
 			System.out.print("> ");
@@ -57,7 +54,7 @@ public class StartAmberServer {
 					ServerLogger.log(AmberServer.getDatabase().showAllUser(), true);
 					break;
 				case "send":
-					new SendNotification();
+					new SendNotification("GCM_Notification");
 					ServerLogger.log(AmberServer.getDatabase().getGCMRegIds().toString(), true);
 					ServerLogger.log("Send Notification", true);
 					break;
@@ -68,7 +65,7 @@ public class StartAmberServer {
 			}
 		}
 	}
-	
+
 	private static void restart(){
 		ServerLogger.log("Restarting serverthread...", true);
 		ServerLogger.log("Stopping serverthread...", true);
