@@ -20,11 +20,11 @@ public class SendNotification {
 					Constants.ARG_GCM_SEND + "?" +
 					Constants.ARG_MESSAGE + "=" +
 					message;
-					// if your url can contain weird characters you will want to 
-					// encode it here, something like this:
-					// myUrl = URLEncoder.encode(myUrl, "UTF-8");
+			// if your url can contain weird characters you will want to 
+			// encode it here, something like this:
+			// myUrl = URLEncoder.encode(myUrl, "UTF-8");
 
-					doHttpUrlConnectionAction(myUrl);
+			doHttpUrlConnectionAction(myUrl);
 		}
 		catch (Exception e)
 		{

@@ -1,4 +1,8 @@
-#drive, #tacho, #map, #motorcontrol {
+#drive, 
+#tacho, 
+#map, 
+#motorcontrol,
+#videosmall {
 	width: 100%;
 	height: 100%;
 }

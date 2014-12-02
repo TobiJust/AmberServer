@@ -1,0 +1,52 @@
+
+.btnbar {
+	width: 80%;
+	height: 100%;
+	position: absolute; 
+	margin-left: 20px;
+	overflow: hidden;
+}
+
+button#btncarpicker,
+button#btnnotifier,
+button#btnswitchview,
+button#btnrecord {
+	height: 100%;
+	width: 10%;
+	transition: background-color 100ms;
+	background-color: transparent;
+	border-style: none;
+	outline: none;
+	background-repeat: no-repeat;
+}
+
+button#btncarpicker {
+	background-image: url('../pics/car.png');
+	background-position: 50% 35%;
+	background-size: 50px 55px;
+}
+
+button#btnnotifier {
+	background-image: url('../pics/notify.png');
+	background-position: 50% 50%;
+	background-size: 30px 20px;
+}
+
+button#btnswitchview {
+	background-image: url('../pics/switch.png');
+	background-position: 50% 50%;
+	background-size: 30px 20px;
+}
+
+button#btnrecord {
+	vertical-align: top;
+	color: #ffcc33;
+	font-size: 30px;
+}
+
+button#btncarpicker:active,
+button#btnnotifier:active,
+button#btnswitchview:active,
+button#btnrecord:active {
+	background-color: #ffcc33;
+}

@@ -34,8 +34,6 @@ public class AmberWebServer
 
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 			context.setContextPath("/");
-			server.setHandler(context);
-
 			context.addServlet(new ServletHolder(new GCMNotification()),"/send");
 
 			ResourceHandler resource_handler = new ResourceHandler();
@@ -45,7 +43,7 @@ public class AmberWebServer
 			resource_handler.setHandler(new AmberWebServerHandler());
 
 			HandlerList handlers = new HandlerList();
-			handlers.setHandlers(new Handler[] { resource_handler});
+			handlers.setHandlers(new Handler[] { resource_handler, context});
 			server.setHandler(handlers);
 
 			server.start();

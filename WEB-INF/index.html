@@ -9,24 +9,47 @@
 <link rel="stylesheet" type="text/css" href="css/general.css">
 <link rel="stylesheet" type="text/css" href="css/armatures.css">
 <link rel="stylesheet" type="text/css" href="css/login.css">
+<link rel="stylesheet" type="text/css" href="css/carpicker.css">
+<link rel="stylesheet" type="text/css" href="css/notifier.css">
+<link rel="stylesheet" type="text/css" href="css/headermenu.css">
 <script type="text/javascript" src="js/jquery.js"></script>
 <script type="text/javascript" src="js/fx.js"></script>
+<!-- amber client namespace incoming -->
 <script type="text/javascript" src="js/amber.js"></script>
+<script type="text/javascript" src="js/amber.ui.js"></script>
 <script type="text/javascript" src="js/osmutils.js"></script>
 <script type="text/javascript" src="js/dummyshit.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-// 	$('.loginfade, .loginbody, .loginmaterial').toggle()
-	amber.locals.drawMap();
+	$('.loginfade, .loginbody, .loginmaterial').toggle();
+// 	amber.locals.drawMaps('map');
+// 	amber.locals.drawMaps('mapview');
+	amber.ui.initLiveView();
 });
 </script>
 </head>
 <body>
 	<div class="loginfade"></div>
-	<div class="loginmaterial"></div>
-	<div class="loginbody">
+	<div class="loginmaterial">
 		<div class="a">A</div><div class="mber">MBER</div>
-		<div class="loginsepline"></div>
+		<div class="loginsepline"></div>	
+	</div>
+	<div class="carpickerbody">
+		<div class="carpickerrow">
+			<p class="welcome">WÄHLEN SIE EIN FAHRZEUG:</p>
+		</div>
+		<div class="carpickerrow">
+			<div class="carpicker">
+				<ul class="carcontainer">
+					<li class="car"></li>
+					<li class="car"></li>
+					<li class="car"></li>
+					<li class="car"></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="loginbody">
 		<div class="loginrow">
 			<p class="welcome">WILLKOMMEN BEI AMBER</p>
 			<p class="info">status login...</p>
@@ -43,6 +66,12 @@ $(document).ready(function(){
 	</div>
 			<!-- MAIN APP MARKUP BEGINS HERE -->
 	<header class="banner">
+		<div class="btnbar">
+			<button id="btnnotifier"></button>
+			<button id="btncarpicker"></button>
+			<button id="btnswitchview"></button>
+			<button id="btnrecord">&FilledSmallSquare; REC</button>
+		</div>
 		<div class="ridedata">
 			<div class="ridelabel">km Gesamt:</div>
 			<div class="ridelabel target_kmall">1.000.000</div>
@@ -54,12 +83,32 @@ $(document).ready(function(){
 			</div>
 		</div>
 		<div class="mapout">
-			<div id="map">
+			<div id="map"></div>
+			<div id="videosmall">
+				<video class="liveviewsmall" src="retard.webm" 
+				  loop type="video/webm"></video>
 			</div>
 		</div>
 	</header>
 	<div class="center">
-	
+		<div class="notifier">
+			<ul id="noticontainer">
+				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
+				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
+				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
+				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
+				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, 
+				rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
+				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna al</li>
+			</ul>
+		</div>
+		<div id="mapcontainer">
+			<div id="mapview"></div>
+		</div>
+		<div id="videocontainer">
+			<video class="liveview" src="retard.webm" 
+			 loop type="video/webm"></video>
+		</div>
 	</div>
 	<footer class="bottommenu">
 		<div class="ambertypo">
@@ -91,27 +140,27 @@ $(document).ready(function(){
 			<div class="motorcontrolin">
 				<div id="motorcontrol">
 					<div class="controlelement airflow" title="Luftdurchfluss">
-						<p class="controllabel target_airflow">000000000</p>	
+						<p class="controllabel target_airflow">-</p>	
 						<p class="controlunit">(g/s)</p>
 					</div>
 					<div class="controlelement airpress" title="Luftdruck im Einlasskanal">
-						<p class="controllabel target_airpress">000000000</p>
+						<p class="controllabel target_airpress">-</p>
 						<p class="controlunit">(kPa)</p>
 					</div>
 					<div class="controlelement airtemp" title="Ansaugluft Temperatur">
-						<p class="controllabel target_airtemp">000000000</p>
+						<p class="controllabel target_airtemp">-</p>
 						<p class="controlunit">(°C)</p>
 					</div>
 					<div class="controlelement coolingliq" title="Kühlflüssigkeit Temperatur">
-						<p class="controllabel target_coolingliq">000000000</p>
+						<p class="controllabel target_coolingliq">-</p>
 						<p class="controlunit">(°C)</p>
 					</div>
 					<div class="controlelement fuelpress" title="Kraftstoffdruck">
-						<p class="controllabel target_fuelpress">000000000</p>
+						<p class="controllabel target_fuelpress">-</p>
 						<p class="controlunit">(kPa)</p>
 					</div>
 					<div class="controlelement enviropress" title="Barometrischer Luftdruck">
-						<p class="controllabel target_enviropress">000000000</p>
+						<p class="controllabel target_enviropress">-</p>
 						<p class="controlunit">(kPa)</p>
 					</div>
 				</div>

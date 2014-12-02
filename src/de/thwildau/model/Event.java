@@ -53,6 +53,9 @@ public class Event implements Serializable {
 	public String getTimeStamp(){
 		return this.timeStamp;
 	}
+	public String getEventType(){
+		return this.eventType;
+	}
 
 
 }

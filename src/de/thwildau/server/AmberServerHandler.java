@@ -1,8 +1,6 @@
 package de.thwildau.server;
 
 
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,8 +9,8 @@ import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 
+import de.thwildau.gcm.SendNotification;
 import de.thwildau.info.ClientMessage;
-import de.thwildau.info.ClientMessage.Ident;
 import de.thwildau.model.Event;
 import de.thwildau.model.User;
 import de.thwildau.model.UserData;
@@ -57,6 +55,13 @@ public class AmberServerHandler extends IoHandlerAdapter
 	public void messageWrite(Object message){
 
 	}
+	/**
+	 * Handle received messages from a Android Application.
+	 * 
+	 * @param session	Session of the User.
+	 * @param message	Incoming Message from User.
+	 * @throws Exception
+	 */
 	@Override
 	public void messageReceived( IoSession session, Object message ) throws Exception
 	{
@@ -71,7 +76,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 
 		ServerLogger.log("received message from... " + session.getId(), DEBUG);
 
-		//
 		switch(receivedMessage.getId()){
 		case LOGIN_CHECK:
 			try{
@@ -141,6 +145,9 @@ public class AmberServerHandler extends IoHandlerAdapter
 			ev.setVehicleID(eventID);
 			session.write(new ClientMessage(ClientMessage.Ident.EVENT, ev));
 			break;
+		case NOTIFICATION:
+			new SendNotification("GCM_Notification from OBU");
+			break;
 		default:
 			break;
 		}
@@ -169,6 +176,11 @@ public class AmberServerHandler extends IoHandlerAdapter
 		handler = null;
 	}
 
+	/**
+	 * Set a Timeout to log a User out if the application is closed.
+	 * 
+	 * @param user_id Current User
+	 */
 	public void setTimeout(int user_id){
 		ServerLogger.log("Set Timeout Countdown to 5 min for User " + user_id, DEBUG);
 		Timer timer = new Timer();
@@ -183,8 +195,11 @@ public class AmberServerHandler extends IoHandlerAdapter
 		timer.schedule(task, TIMEOUT);
 		timers.put(user_id, task);
 	}
+	/**
+	 * Cancel running Timer for Logout, when User logs in again.
+	 * @param user_id Current User
+	 */
 	public void cancelTimeout(int user_id){
 		timers.get(user_id).cancel();
-//		setTimeout(user_id);
 	}
 }

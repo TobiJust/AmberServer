@@ -1,0 +1,29 @@
+.notifier {
+	position: absolute;
+	margin-left: -20%;
+	width: 20%;
+	height: 100%;
+	overflow-x: hidden;
+	background: #595959;
+	border-right: 3px solid #ffcc33;
+	z-index: 13;
+}
+
+#noticontainer {
+	padding-left: 0px;
+	padding-right: 10px;
+	margin: 0px;
+	height: 100%;
+	overflow-x: hidden;
+	list-style-type: none;
+	border-right: 10px solid #ffcc33;
+}
+
+.notification {
+	margin: 5px;
+	min-height: 50px;
+	padding-bottom: 15px;
+	width: 100%;
+	border-bottom: 1px solid #ffcc33;
+}
+

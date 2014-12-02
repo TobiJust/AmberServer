@@ -30,7 +30,7 @@ public class UserData implements Serializable{
 				byte[] eventImage = (byte[]) eventData[5];	// EventImage
 
 				Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
-				// Add events to the current Ride
+				// Add events to the current Vehicle
 				vehicle.getEventList().add(event);
 
 			}

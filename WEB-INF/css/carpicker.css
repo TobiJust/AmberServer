@@ -1,0 +1,55 @@
+.carpickerbody {
+	position: absolute;
+	display: none;
+	border-radius: 8px;
+	width: 500px;
+	height: 400px;
+	left: 50%;
+	top: 50%;
+	margin-left: -250px;
+	margin-top: -200px;
+	z-index: 22;
+	overflow: hidden;
+}
+
+.carpickerrow {
+	margin-left: 20px;
+	margin-top: 20px;
+	width: 100%;
+}
+
+.carpickerbody>.a {
+	text-shadow: 0 0 30px #ffcc33, 
+				 0 0 30px #ffcc33;
+}
+
+.carpicker {
+	background: #080808;
+	width: 470px;
+	height: 230px;
+	position: absolute;
+	margin-left: -2px;	
+	margin-top: -45px;
+	overflow: hidden;
+}
+
+.carcontainer {
+	margin: 0px;
+	padding: 0px;
+	position: relative;
+	height: 100%;
+	width: 100%;
+	white-space: nowrap;
+	list-style-type: none;
+	overflow-x: auto;
+	overflow-y: hidden;
+	direction: ltr;
+}
+
+.car {
+	position: relative;
+	display: inline-block;
+	height: 98%;
+	width: 150px;
+	border: 1px solid #ffcc33; 
+}

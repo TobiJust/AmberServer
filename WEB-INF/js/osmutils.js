@@ -1,9 +1,16 @@
-// draw the initial map for amber 
-amber.locals.drawMap = function() {
-	OpenLayers.Lang.setCode('de');
-//	var lon = 13.63286;
-//	var lat = 52.31954;
-	amber.locals.AmberMap = new OpenLayers.Map('map', {
+//draw both maps in amber 
+amber.locals.drawMaps = function(element){
+	$('#'+amber.locals.amberMapContainer).empty();
+	amber.locals.amberMapContainer = element;
+	$('#'+element).empty();
+	amber.locals.initLayers();
+	amber.locals.drawMap(element);
+};
+// draw a particular map for amber
+amber.locals.drawMap = function(mapContainer) {
+	this.AmberMap = {};
+	this.initLayers();
+	this.AmberMap = new OpenLayers.Map(mapContainer, {
 		projection: new OpenLayers.Projection("EPSG:900913"),
 		displayProjection: new OpenLayers.Projection("EPSG:4326"),
 		controls: [new OpenLayers.Control.Navigation(),
@@ -17,6 +24,15 @@ amber.locals.drawMap = function() {
 		maxResolution: 156543,
 		units: 'meters'
 	});
+	this.AmberMap.addLayers([this.LayerMapnik,this.LayerMarkers]);
+	this.jumpTo(this.AmberMap);
+	addMarker(this.AmberMap, this.LayerMarkers, this.LongLat.lon, this.LongLat.lat, "");
+};
+// init osm layers
+amber.locals.initLayers = function(){
+	OpenLayers.Lang.setCode('de');
+	this.LayerMapnik = {};
+	this.LayerMarkers = {};
 	this.LayerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
 	this.LayerMapnik.tileOptions.crossOriginKeyword = null;
 	this.LayerMarkers = new OpenLayers.Layer.Markers("Address", { 
@@ -24,11 +40,7 @@ amber.locals.drawMap = function() {
 	    visibility: true, 
 	    displayInLayerSwitcher: false 
 	});
-	this.AmberMap.addLayers([this.LayerMapnik,this.LayerMarkers]);
-	this.jumpTo(this.zoom);
-	addMarker(this.LayerMarkers, this.LongLat.lon, this.LongLat.lat, "");
 };
-
 // move the marker to the long and lat given as parameters
 amber.locals.updateMarker = function(){
 	// only for testing!//
@@ -65,7 +77,7 @@ function Lat2Merc(lat) {
 }
  
 
-function addMarker(layer, lon, lat, popupContentHTML) {
+function addMarker(map, layer, lon, lat, popupContentHTML) {
     var ll = new OpenLayers.LonLat(Lon2Merc(lon), Lat2Merc(lat));
     var feature = new OpenLayers.Feature(layer, ll); 
     amber.locals.Marker = new OpenLayers.Marker(ll);
@@ -91,7 +103,6 @@ function addMarker(layer, lon, lat, popupContentHTML) {
     marker.events.register("mousedown", feature, markerClick);
  
     layer.addMarker(marker);
-    amber.locals.AmberMap.addPopup(feature.createPopup(feature.closeBox));
 }
  
 function getCycleTileURL(bounds) {

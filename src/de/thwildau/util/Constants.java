@@ -16,6 +16,7 @@ public class Constants {
 	public static final String ERROR_LOGIN = "No such User or Password";
 	public static final String ERROR_GCM = "Error while registering GCM";
 	public static final Object ERROR_REGISTER = "Registration failed";	
+	public static final String ERROR_RECORD = "Error while recording";
 	public static final String ERROR_UNKNOWN = "Unknown argument given";
 	
 	public static final String ARG_GCM_SEND = "send";	

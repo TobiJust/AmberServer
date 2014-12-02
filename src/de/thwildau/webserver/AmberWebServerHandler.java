@@ -29,7 +29,7 @@ public class AmberWebServerHandler extends AbstractHandler{
 
 	public void handle(String target,Request baseRequest,HttpServletRequest request,HttpServletResponse response)
 			throws IOException, ServletException{
-		
+
 		// allow cross origin
 		response.addHeader("Access-Control-Allow-Origin", "*");
 		try{
@@ -52,18 +52,52 @@ public class AmberWebServerHandler extends AbstractHandler{
 					UserData responseData = new UserData();
 					responseData = responseData.prepareUserData(user_id);
 					response.setHeader("Content-Type", "text/plain");
-				    PrintWriter writer = response.getWriter();
-				    writer.write(convertToJSON(responseData));
-				    writer.close();
+					PrintWriter writer = response.getWriter();
+					writer.write(convertToJSON(responseData));
+					writer.close();
 					ServerLogger.log("Login from Web App succeeded: " + usernameLogin, DEBUG);
 				}
 				break;
 			case "/logout":
-				
+				String logoutData = request.getParameter("data");
+				String usernameLogout = parseLoginRequest(logoutData)[0];
+				// Database validation
+				// Check for User and Password
+				//				user_id = AmberServer.getDatabase().logout(usernameLogout);
 				ServerLogger.log("Logout from Web App succeeded", DEBUG);
 				break;
 			case "/requestDataPackage":
-				ServerLogger.log("Request from Web App", DEBUG);
+				int userID = Integer.parseInt(request.getParameter("userID"));
+				UserData responseData = new UserData();
+				responseData = responseData.prepareUserData(userID);
+				if(true)
+					response.sendError(500, Constants.ERROR_RECORD);
+				else{
+					response.setHeader("Content-Type", "text/plain");
+					PrintWriter writer = response.getWriter();
+					writer.write(convertToJSON(responseData));
+					writer.close();
+					ServerLogger.log("Request from Web App", DEBUG);
+				}
+				break;
+			case "/send":
+				ServerLogger.log("Send Notification to Devices", DEBUG);
+				break;
+			case "/startRecord":
+				userID = Integer.parseInt(request.getParameter("userID"));
+				int vehicleID = Integer.parseInt(request.getParameter("vehicleID"));
+				int cameraID = Integer.parseInt(request.getParameter("cameraID"));	
+				response.setHeader("Content-Type", "text/plain");
+				PrintWriter writer = response.getWriter();
+				writer.write("Starting to record from camera " + cameraID);
+				writer.close();
+				ServerLogger.log("Starting to record from camera " + cameraID + " on Vehicle "
+						+ vehicleID + " for User " + userID, DEBUG);
+				break;
+			case "/stopRecord":
+				ServerLogger.log("Video recorded and processed, ready to download.", DEBUG);
+				break;
+			case "/sendCommand":
 				break;
 			default:
 				// No Access to those websites

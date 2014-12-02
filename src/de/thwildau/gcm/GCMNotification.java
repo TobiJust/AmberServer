@@ -1,15 +1,8 @@
 package de.thwildau.gcm;
 
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -48,66 +41,33 @@ public class GCMNotification extends HttpServlet {
 
 		MulticastResult result = null;
 
-		String share = request.getParameter("shareRegId");
+		try {
 
-		// GCM RedgId of Android device to send push notification
+			String userMessage = request.getParameter("message");
+			Sender sender = new Sender(GOOGLE_SERVER_KEY);
+			Message message = new Message.Builder().timeToLive(30)
+					.delayWhileIdle(true).addData(MESSAGE_KEY, userMessage)
+					.build();
+			//				Set regIdSet = readFromFile();
+			//				regIdList.addAll(regIdSet);
+			List<String> regIdList = AmberServer.getDatabase().getGCMRegIds();
 
-		if (share != null && !share.isEmpty()) {
-			writeToFile(request.getParameter("regId"));
-			request.setAttribute("pushStatus", "GCM RegId Received.");
-		} else {
+			System.out.println("regId: " + regIdList);
+			System.out.println(message);			
+			response.setContentType("text/html");
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getWriter().println("<h1>"+response.getStatus()+"</h1>");
+			response.getWriter().println("session=" + request.getSession(true).getId());
+			result = sender.send(message, regIdList, 1);	
+			request.setAttribute("pushStatus", result.toString());
 
-			try {
-
-				String userMessage = request.getParameter("message");
-				Sender sender = new Sender(GOOGLE_SERVER_KEY);
-				Message message = new Message.Builder().timeToLive(30)
-						.delayWhileIdle(true).addData(MESSAGE_KEY, userMessage)
-						.build();
-//				Set regIdSet = readFromFile();
-//				regIdList.addAll(regIdSet);
-				List<String> regIdList = AmberServer.getDatabase().getGCMRegIds();
-				
-				System.out.println("regId: " + regIdList);
-				System.out.println(message);			
-				response.setContentType("text/html");
-				response.setStatus(HttpServletResponse.SC_OK);
-				response.getWriter().println("<h1>"+response.getStatus()+"</h1>");
-				response.getWriter().println("session=" + request.getSession(true).getId());
-				result = sender.send(message, regIdList, 1);	
-				request.setAttribute("pushStatus", result.toString());
-				
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-				request.setAttribute("pushStatus",
-						"RegId required: " + ioe.toString());
-			} catch (Exception e) {
-				e.printStackTrace();
-				request.setAttribute("pushStatus", e.toString());
-			}
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			request.setAttribute("pushStatus",
+					"RegId required: " + ioe.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+			request.setAttribute("pushStatus", e.toString());
 		}
-	}
-
-	private void writeToFile(String regId) throws IOException {
-		Set regIdSet = readFromFile();
-
-		if (!regIdSet.contains(regId)) {
-			PrintWriter out = new PrintWriter(new BufferedWriter(
-					new FileWriter(REG_ID_STORE, true)));
-			out.println(regId);
-			out.close();
-		}
-
-	}
-
-	private Set readFromFile() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(REG_ID_STORE));
-		String regId = "";
-		Set regIdSet = new HashSet();
-		while ((regId = br.readLine()) != null) {
-			regIdSet.add(regId);
-		}
-		br.close();
-		return regIdSet;
 	}
 }

@@ -15,9 +15,12 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import de.thwildau.util.ServerLogger;
+
 
 public class DatabaseAccess {
 
+	protected static final boolean DEBUG = true;
 	// JDBC
 	private Connection connect = null;
 	private Statement statement = null;
@@ -41,7 +44,7 @@ public class DatabaseAccess {
 					if (!connect.isClosed() && connect != null) { 
 						close(null); 
 						if (connect.isClosed()) 
-							System.out.println("Connection to Database closed"); 
+							ServerLogger.log("Connection to Database closed", DEBUG); 
 					} 
 				} catch (SQLException e) { 
 					e.printStackTrace(); 
@@ -81,7 +84,10 @@ public class DatabaseAccess {
 		} 
 		return user_id;
 	}
-
+	/**
+	 * Update the session when a User logs in again.
+	 * @param user_id	Current User
+	 */
 	public void updateSession(int user_id){
 		String query = "UPDATE session SET time_stamp=? WHERE user_id=?";
 		try {
@@ -93,7 +99,10 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		} 
 	}
-
+	/**
+	 * Logout a User, remove from Session Table.
+	 * @param user_id	Current User
+	 */
 	public void logout(int user_id) {
 		String query = "DELETE FROM session WHERE user_id=?";
 		try {
@@ -105,7 +114,12 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * Check, if the current User is still online.
+	 * @param user_id	Current User
+	 * @return	True, if he's online
+	 * 			False, if not.
+	 */
 	public boolean checkOnline(int user_id){
 		boolean isOnline = false;
 		String query = "SELECT COUNT(*) FROM session WHERE user_id=?";
@@ -234,7 +248,11 @@ public class DatabaseAccess {
 		}		
 		return regIds;
 	}
-
+	/**
+	 * Return all Vehicles mapped to the User.
+	 * @param userID	Current User
+	 * @return	List of Vehicle Objects
+	 */
 	public ArrayList<Integer> getVehicles(int userID){
 		ArrayList<Integer> vehicle_ids = new ArrayList<Integer>();
 		String query = "SELECT Vehicle_id FROM VehiclePerUser WHERE user_id=?";
@@ -250,7 +268,11 @@ public class DatabaseAccess {
 		} 
 		return vehicle_ids;
 	}
-
+	/**
+	 * Return all Events mapped to a Vehicle Object.
+	 * @param vehicleID	Current Vehicle Object
+	 * @return	List of Event Objects
+	 */
 	public Object[] getEvents(int vehicleID){
 		Object[] data = new Object[2];
 		ArrayList<Integer> ride_ids = new ArrayList<Integer>();
@@ -294,7 +316,11 @@ public class DatabaseAccess {
 	//		} 
 	//		return event_ids;
 	//	}
-
+	/**
+	 * Return the data of an Event.
+	 * @param eventID	Current Event
+	 * @return	All Attributes of an Event in an Array.
+	 */
 	public Object[] getEventData(int eventID){
 		Object[] eventData = null;
 		String query = "SELECT * FROM Event WHERE event_id=?";
