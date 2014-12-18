@@ -31,11 +31,14 @@ public class AmberWebServerHandler extends AbstractHandler{
 			throws IOException, ServletException{
 
 		// allow cross origin
-		response.addHeader("Access-Control-Allow-Origin", "*");
+		if(DEBUG)
+			response.addHeader("Access-Control-Allow-Origin", "*");
+
 		try{
-			String requestIdent = request.getPathInfo();
+			String requestIdent = request.getPathInfo().split("/")[1];
+
 			switch(requestIdent){
-			case "/login":
+			case "login":
 				String loginData = request.getParameter("data");
 				String usernameLogin = parseLoginRequest(loginData)[0];
 				//TODO: get hash value from Web App
@@ -58,7 +61,7 @@ public class AmberWebServerHandler extends AbstractHandler{
 					ServerLogger.log("Login from Web App succeeded: " + usernameLogin, DEBUG);
 				}
 				break;
-			case "/logout":
+			case "logout":
 				String logoutData = request.getParameter("data");
 				String usernameLogout = parseLoginRequest(logoutData)[0];
 				// Database validation
@@ -66,7 +69,7 @@ public class AmberWebServerHandler extends AbstractHandler{
 				//				user_id = AmberServer.getDatabase().logout(usernameLogout);
 				ServerLogger.log("Logout from Web App succeeded", DEBUG);
 				break;
-			case "/requestDataPackage":
+			case "requestDataPackage":
 				int userID = Integer.parseInt(request.getParameter("userID"));
 				UserData responseData = new UserData();
 				responseData = responseData.prepareUserData(userID);
@@ -80,10 +83,10 @@ public class AmberWebServerHandler extends AbstractHandler{
 					ServerLogger.log("Request from Web App", DEBUG);
 				}
 				break;
-			case "/send":
+			case "send":
 				ServerLogger.log("Send Notification to Devices", DEBUG);
 				break;
-			case "/startRecord":
+			case "startRecord":
 				userID = Integer.parseInt(request.getParameter("userID"));
 				int vehicleID = Integer.parseInt(request.getParameter("vehicleID"));
 				int cameraID = Integer.parseInt(request.getParameter("cameraID"));	
@@ -94,10 +97,12 @@ public class AmberWebServerHandler extends AbstractHandler{
 				ServerLogger.log("Starting to record from camera " + cameraID + " on Vehicle "
 						+ vehicleID + " for User " + userID, DEBUG);
 				break;
-			case "/stopRecord":
+			case "stopRecord":
 				ServerLogger.log("Video recorded and processed, ready to download.", DEBUG);
 				break;
-			case "/sendCommand":
+			case "sendCommand":
+			case "website":
+			case "websocket":
 				break;
 			default:
 				// No Access to those websites

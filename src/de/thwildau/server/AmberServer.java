@@ -38,7 +38,7 @@ public class AmberServer{
 		try{
 			//Database Connection
 			database = new DatabaseAccess();
-
+			acceptor.setReuseAddress(true);
 			acceptor.setHandler(AmberServerHandler.getInstance());
 			acceptor.bind(new InetSocketAddress(Integer.parseInt(ServerPreferences.getProperty(Constants.PORT))));
 			ServerLogger.log("Server " + InetAddress.getLocalHost().getHostAddress() + " listening on port: "+ ServerPreferences.getProperty(Constants.PORT), true);

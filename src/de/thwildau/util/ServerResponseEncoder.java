@@ -12,7 +12,6 @@ import de.thwildau.info.ClientMessage;
 
 public class ServerResponseEncoder extends ProtocolEncoderAdapter {
 
-	private static final String RESPONSE_DELIMITER_CHAR = "";
 	private int maxObjectSize = Integer.MAX_VALUE; // 2GB
 
 	public void encode(IoSession ioSession, Object message, ProtocolEncoderOutput out) throws Exception {
@@ -21,9 +20,12 @@ public class ServerResponseEncoder extends ProtocolEncoderAdapter {
 			throw new NotSerializableException();
 		}
 		
-		IoBuffer buf = IoBuffer.allocate(128);
+		IoBuffer buf = IoBuffer.allocate(0);
 		buf.setAutoExpand(true);
-		buf.putObject(message);
+		if(message instanceof byte[])
+			buf.put((byte[])message);
+		else
+			buf.putObject(message);
 
 		int objectSize = buf.position() - 4;
 		if (objectSize > maxObjectSize) {

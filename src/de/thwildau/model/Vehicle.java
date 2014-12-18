@@ -3,6 +3,8 @@ package de.thwildau.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import de.thwildau.server.AmberServer;
+
 public class Vehicle implements Serializable{
 
 
@@ -40,6 +42,26 @@ public class Vehicle implements Serializable{
 
 	public String getVehicleName(){
 		return this.vehicleName;
+	}
+
+	public Vehicle prepareVehicle(String vehicleID) {
+		Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
+		ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
+		this.vehicleName = (String)vehicleData[0];
+		for(int eventID : eventIDList){
+			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
+			String eventType = (String)eventData[1];
+			String eventTime = (String)eventData[2];
+			double eventLat = (double)eventData[3];
+			double eventLon = (double)eventData[4];
+			byte[] eventImage = (byte[]) eventData[5];	// EventImage
+
+			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
+			// Add events to the current Vehicle
+			this.getEventList().add(event);
+
+		}
+		return this;
 	}
 
 }

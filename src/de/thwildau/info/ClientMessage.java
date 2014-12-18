@@ -7,7 +7,7 @@ public class ClientMessage implements Serializable{
 	private static final long serialVersionUID = 5241215198936208524L;
 
 	public static enum Ident {
-		EVENT_REQUEST, LOGIN_CHECK, LOGIN, ERROR, REGISTER, EVENT, NOTIFICATION
+		EVENT_REQUEST, LOGIN_CHECK, LOGIN, ERROR, REGISTER, EVENT, NOTIFICATION, REGISTER_VEHICLE, UNREGISTER_VEHICLE
 	}
 	
 	private Ident id;

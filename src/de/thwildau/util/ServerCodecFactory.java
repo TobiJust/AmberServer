@@ -8,7 +8,7 @@ import org.apache.mina.filter.codec.textline.TextLineEncoder;
 
 public class ServerCodecFactory implements ProtocolCodecFactory {
 	/**
-	    * A protocol without encoder and docoder is a waste. 
+	    * A protocol without encoder and decoder is a waste. 
 	    * Encode mentioned here
 	    */
 	    public ProtocolEncoder getEncoder(IoSession ioSession) throws Exception {
@@ -16,7 +16,7 @@ public class ServerCodecFactory implements ProtocolCodecFactory {
 	    }
 	    
 	    /**
-	     * A protocol without encoder and docoder is a waste. 
+	     * A protocol without encoder and decoder is a waste. 
 	     * Encode mentioned here
 	     */
 	    public ProtocolDecoder getDecoder(IoSession ioSession) throws Exception {

@@ -193,7 +193,7 @@ public class DatabaseAccess {
 	 */
 	public boolean addUser(String username, byte[] pass){
 		int rows = 0;
-		String query = "insert into USER (user_name, user_pw)values (?, ?)";
+		String query = "insert into USER(user_name, user_pw) values (?, ?)";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			// "user_name, user_pw);
@@ -206,6 +206,61 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 		return (rows > 0) ? true : false;
+	}
+	/**
+	 * Add a new Vehicle to the User
+	 * 
+	 * @return Success/Error
+	 */
+	public boolean registerVehicle(int user_id, String vehicle_id){
+		int rows = 0;
+		String query = "Insert into VehiclePerUser(user_id, vehicle_id) values (?, ?)";
+		if(getVehicleName(vehicle_id) == null)
+			return false;
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			// "user_name, user_pw);
+			// parameters start with 1
+			preparedStatement.setInt(1, user_id);
+			preparedStatement.setString(2, vehicle_id);
+			rows = preparedStatement.executeUpdate();
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return (rows > 0) ? true : false;
+	}
+	public boolean unregisterVehicle(int user_id, String vehicle_id){
+		boolean unregister = false;
+		String query = "DELETE FROM VehiclePerUser WHERE user_id=? AND vehicle_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, user_id);
+			preparedStatement.setString(2, vehicle_id);
+			ResultSet rs = preparedStatement.executeQuery();
+			if(rs.next())
+				unregister = true;
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return unregister;
+	}
+
+	private String getVehicleName(String vehicle_id){
+		String query = "Select vehicle_name from Vehicle where vehicle_id=?";
+		String name = null;
+		try{
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setString(1, vehicle_id);
+			ResultSet rs2 = preparedStatement.executeQuery();
+			while(rs2.next())
+				name = rs2.getString(1);
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return name;
 	}
 
 	/**
@@ -253,15 +308,15 @@ public class DatabaseAccess {
 	 * @param userID	Current User
 	 * @return	List of Vehicle Objects
 	 */
-	public ArrayList<Integer> getVehicles(int userID){
-		ArrayList<Integer> vehicle_ids = new ArrayList<Integer>();
+	public ArrayList<String> getVehicles(int userID){
+		ArrayList<String> vehicle_ids = new ArrayList<String>();
 		String query = "SELECT Vehicle_id FROM VehiclePerUser WHERE user_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, userID);
 			ResultSet rs = preparedStatement.executeQuery();
 			while(rs.next())
-				vehicle_ids.add(rs.getInt(1));
+				vehicle_ids.add(rs.getString(1));
 			preparedStatement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -273,22 +328,22 @@ public class DatabaseAccess {
 	 * @param vehicleID	Current Vehicle Object
 	 * @return	List of Event Objects
 	 */
-	public Object[] getEvents(int vehicleID){
+	public Object[] getEvents(String vehicleID){
 		Object[] data = new Object[2];
-		ArrayList<Integer> ride_ids = new ArrayList<Integer>();
-		String name = "";
+		ArrayList<Integer> event_ids = new ArrayList<Integer>();
+		String name = null;
 		String query1 = "SELECT Event_id FROM EventPerVehicle WHERE vehicle_id=?";
 		String query2 = "SELECT Vehicle_Name FROM Vehicle WHERE vehicle_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query1);
-			preparedStatement.setInt(1, vehicleID);
+			preparedStatement.setString(1, vehicleID);
 			ResultSet rs1 = preparedStatement.executeQuery();
 			while(rs1.next())
-				ride_ids.add(rs1.getInt(1));
+				event_ids.add(rs1.getInt(1));
 			preparedStatement.close();
 
 			preparedStatement = connect.prepareStatement(query2);
-			preparedStatement.setInt(1, vehicleID);
+			preparedStatement.setString(1, vehicleID);
 			ResultSet rs2 = preparedStatement.executeQuery();
 			while(rs2.next())
 				name = rs2.getString(1);
@@ -297,25 +352,27 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		} 
 		data[0] = name;
-		data[1] = ride_ids;
+		data[1] = event_ids;
 		return data;
 	}
 
-	//	public ArrayList<Integer> getEvents(int rideID){
-	//		ArrayList<Integer> event_ids = new ArrayList<Integer>();
-	//		String query = "SELECT Event_id FROM EventPerRide WHERE ride_id=?";
-	//		try {
-	//			preparedStatement = connect.prepareStatement(query);
-	//			preparedStatement.setInt(1, rideID);
-	//			ResultSet rs = preparedStatement.executeQuery();
-	//			while(rs.next())
-	//				event_ids.add(rs.getInt(1));
-	//			preparedStatement.close();
-	//		} catch (SQLException e) {
-	//			e.printStackTrace();
-	//		} 
-	//		return event_ids;
-	//	}
+	public boolean storeVideostream(int userID, String pathToVideo){
+		int rows = 0;
+		String query = "INSERT INTO video (user_id, video_path, time_stamp) values (?, ?, ?)";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			// "user_name, user_pw);
+			// parameters start with 1
+			preparedStatement.setInt(1, userID);
+			preparedStatement.setString(2, pathToVideo);
+			rows = preparedStatement.executeUpdate();
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return (rows > 0) ? true : false;
+		
+	}
 	/**
 	 * Return the data of an Event.
 	 * @param eventID	Current Event

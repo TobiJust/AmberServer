@@ -4,7 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.github.sarxos.webcam.Webcam;
+
 import de.thwildau.gcm.SendNotification;
+import de.thwildau.info.OBUMessage;
 import de.thwildau.server.AmberServer;
 import de.thwildau.server.AmberServerHandler;
 import de.thwildau.util.ServerLogger;
@@ -18,16 +21,9 @@ public class StartAmberServer {
 	private static String[] arguments;
 
 	public static void main(String[] args){
-
 		arguments = args;		
-
-		try {
-			ServerLogger.init(true);
-			ServerPreferences.loadProperties();
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-
+		
+		initLogger();
 		AmberServer.init();
 		AmberWebServer.init();
 
@@ -58,6 +54,12 @@ public class StartAmberServer {
 					ServerLogger.log(AmberServer.getDatabase().getGCMRegIds().toString(), true);
 					ServerLogger.log("Send Notification", true);
 					break;
+				case "obu":
+					byte[] b = {(byte)0x01};
+					new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b);
+					
+//					new OBUMessage(OBUMessage.REQUEST_PICTURE, "test".getBytes());
+					break;
 				}
 			} catch (IOException e) {
 				System.err.println("Exception caught in command line. Shutting down...");
@@ -66,13 +68,20 @@ public class StartAmberServer {
 		}
 	}
 
+	private static void initLogger(){
+		try {
+			ServerLogger.init(true);
+			ServerPreferences.loadProperties();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
 	private static void restart(){
 		ServerLogger.log("Restarting serverthread...", true);
 		ServerLogger.log("Stopping serverthread...", true);
 		AmberServer.getAcceptor().dispose();
 		AmberServerHandler.clearInstance();
 		AmberServer.stop();
-		ServerLogger.stop(true);
 		AmberServer.init();
 	}
 

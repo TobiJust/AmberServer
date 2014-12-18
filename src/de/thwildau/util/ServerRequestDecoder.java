@@ -10,7 +10,6 @@ import de.thwildau.info.ClientMessage;
 
 public class ServerRequestDecoder extends CumulativeProtocolDecoder {
 
-	private static final char REQUEST_DELIMITER_CHAR = '\n';
 
 	@Override
 	protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws Exception {
@@ -22,26 +21,20 @@ public class ServerRequestDecoder extends CumulativeProtocolDecoder {
 		in.setAutoExpand(true);
 		in.setAutoShrink(true);
 
-		//		if (in.remaining() >= 12) {
 		try{
 			ClientMessage msg = (ClientMessage) in.getObject();
-
+			
 			out.write(msg);
 			return true;
 		}catch(Exception e){
-
 			while (in.hasRemaining()) {
-				char testChar = (char)in.get(in.limit()-1);
-				System.out.println("Message Size: (incl. limitChar) " + in.limit());
-				System.out.println(">>>" +testChar +"<<<");
-				char[] charArray = new char[in.limit() - in.position()];
+				byte[] byteArray = new byte[in.limit()];
 				for (int i=in.position(); i< in.limit(); i++) {
-					char ch = (char)in.get(i);
-					charArray[i] = ch;
+					byte b = in.get(i);
+					byteArray[i] = b;
 				}
-				in.position(in.limit());
-				String outputString = new String(charArray);
-				out.write(outputString);
+				in.position(in.limit());				
+				out.write(byteArray);
 				return true;
 			}
 			return false;

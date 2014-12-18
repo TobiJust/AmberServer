@@ -16,8 +16,8 @@ public class UserData implements Serializable{
 	private int userID;
 
 	public UserData prepareUserData(int userID){
-		ArrayList<Integer> vehicleIDList = AmberServer.getDatabase().getVehicles(userID);
-		for(int vehicleID : vehicleIDList){
+		ArrayList<String> vehicleIDList = AmberServer.getDatabase().getVehicles(userID);
+		for(String vehicleID : vehicleIDList){
 			Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
 			ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 			Vehicle vehicle = new Vehicle((String)vehicleData[0]);
