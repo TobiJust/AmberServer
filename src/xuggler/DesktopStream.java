@@ -18,32 +18,51 @@ import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
 
-public class DesktopStream {
+import de.thwildau.util.ServerLogger;
+
+public class DesktopStream extends Thread{
 
 	private static final double FRAME_RATE = 25;
 
-	private static final int SECONDS_TO_RUN_FOR = 30;
+	private static final int SECONDS_TO_RUN_FOR = 300;
 
-	private static final String outputFilename = "mydesktop_"+(int)FRAME_RATE+"fps"+SECONDS_TO_RUN_FOR+"s.mp4";
+	//	private static final String outputFilename = "mydesktop_"+(int)FRAME_RATE+"fps"+SECONDS_TO_RUN_FOR+"s.mp4";
+
+	private static final boolean DEBUG = true;
 
 	private static Dimension screenBounds;
 
-	public DesktopStream(Session session){
-	
-		System.out.println("Stream started for Session " + session.getId());
+	private Session session;
+	private String vehicleID;
+
+	private boolean running;
+
+	public DesktopStream(Session session, String vehicleID){
+		this.session = session;
+		this.vehicleID = vehicleID;		
+	}
+
+	public void startStream(){	
+		if(!this.running){
+			this.running = true;
+			start();
+		}
+	}
+	public void run(){
+		ServerLogger.log("Stream started for Session " + session.getId(), DEBUG);
 		// let's make a IMediaWriter to write the file.
-		final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
+		//		final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
 
 		screenBounds = Toolkit.getDefaultToolkit().getScreenSize();
 
 		// We tell it we're going to add one video stream, with id 0,
 		// at position 0, and that it will have a fixed frame rate of FRAME_RATE.
-		writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, 
-				screenBounds.width/2, screenBounds.height/2);
+		//		writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, 
+		//				screenBounds.width/2, screenBounds.height/2);
 
 		long startTime = System.nanoTime();
 
-		for (int index = 0; index < SECONDS_TO_RUN_FOR * FRAME_RATE; index++) {
+		while(running) {
 
 			// take the screen shot
 			BufferedImage screen = getDesktopScreenshot();
@@ -53,8 +72,8 @@ public class DesktopStream {
 					BufferedImage.TYPE_3BYTE_BGR);
 
 			// encode the image to stream #0
-			writer.encodeVideo(0, bgrScreen, System.nanoTime() - startTime, 
-					TimeUnit.NANOSECONDS);
+			//			writer.encodeVideo(0, bgrScreen, System.nanoTime() - startTime, 
+			//					TimeUnit.NANOSECONDS);
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
@@ -80,8 +99,13 @@ public class DesktopStream {
 		}
 
 		// tell the writer to close and write the trailer if  needed
-		writer.close();
-		System.out.println("Stream end for Session " + session.getId());
+		//		writer.close();
+	}
+
+	public void stopStream(){
+		this.running = false;
+		ServerLogger.log("Stream finished for Session " + session.getId(), DEBUG);
+
 	}
 
 	public static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {

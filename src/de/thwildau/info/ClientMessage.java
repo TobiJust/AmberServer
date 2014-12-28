@@ -3,13 +3,14 @@ package de.thwildau.info;
 import java.io.Serializable;
 
 public class ClientMessage implements Serializable{
-	
+
 	private static final long serialVersionUID = 5241215198936208524L;
 
 	public static enum Ident {
-		EVENT_REQUEST, LOGIN_CHECK, LOGIN, ERROR, REGISTER, EVENT, NOTIFICATION, REGISTER_VEHICLE, UNREGISTER_VEHICLE
+		EVENT_REQUEST, LOGIN_CHECK, LOGIN, ERROR, REGISTER, EVENT,
+		NOTIFICATION, REGISTER_VEHICLE, UNREGISTER_VEHICLE, TOGGLE_ALARM
 	}
-	
+
 	private Ident id;
 	private Object content;
 
@@ -33,5 +34,5 @@ public class ClientMessage implements Serializable{
 	public void setContent(Object content) {
 		this.content = content;
 	}
-	
+
 }

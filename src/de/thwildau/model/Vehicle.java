@@ -14,8 +14,9 @@ public class Vehicle implements Serializable{
 	private static final long serialVersionUID = -1208507633758359464L;
 	private ArrayList<Event> eventList;
 	private String vehicleName;
+	private String vehicleID;
 	public String date;
-	public int image;
+	public byte[] image;
 	public boolean boxed;
 
 
@@ -28,7 +29,7 @@ public class Vehicle implements Serializable{
 		eventList = new ArrayList<Event>();
 	}
 
-	public Vehicle(String name, String date, int image, boolean boxed) {
+	public Vehicle(String name, String date, byte[] image, boolean boxed) {
 		this.vehicleName = name;
 		this.date = date;
 		this.image = image;
@@ -39,6 +40,9 @@ public class Vehicle implements Serializable{
 	public ArrayList<Event> getEventList(){
 		return this.eventList;
 	}
+	public void setVehicleID(String vehicleID) {
+		this.vehicleID = vehicleID;
+	}
 
 	public String getVehicleName(){
 		return this.vehicleName;
@@ -48,6 +52,7 @@ public class Vehicle implements Serializable{
 		Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
 		ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 		this.vehicleName = (String)vehicleData[0];
+		this.setImage((byte[]) vehicleData[2]);
 		for(int eventID : eventIDList){
 			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
 			String eventType = (String)eventData[1];
@@ -59,9 +64,42 @@ public class Vehicle implements Serializable{
 			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
 			// Add events to the current Vehicle
 			this.getEventList().add(event);
-
 		}
+		this.vehicleID = vehicleID;
 		return this;
 	}
+
+	public String getVehicleID() {
+		return vehicleID;
+	}
+
+	public String getDate() {
+		return date;
+	}
+
+	public byte[] getImage() {
+		return image;
+	}
+
+	public boolean isBoxed() {
+		return boxed;
+	}
+
+	public void setAlarmStatus(int status) {		
+		this.boxed = (status == 1) ? true : false;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
+	}
+
+	public void setVehicleName(String name) {
+		this.vehicleName = name;		
+	}
+
+	public void setImage(byte[] data) {
+		this.image = data;
+	}
+
 
 }

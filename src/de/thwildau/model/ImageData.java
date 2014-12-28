@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -17,9 +18,12 @@ public class ImageData {
 
 	}
 
-	public void addData(byte[] data){
+	public void addData(List<Byte> list){
 		try {
-			image.write(data);
+			byte[] bytes = new byte[list.size()];
+			for(int i=0; i < list.size(); i++)
+				bytes[i] = list.get(i);
+			image.write(bytes);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -42,13 +46,13 @@ public class ImageData {
 
 	public void writeImageToFile(){
 		try {
-
+			System.out.println("Write To File 2");
 			// convert byte array back to BufferedImage
 			InputStream in = new ByteArrayInputStream(image.toByteArray());
 			BufferedImage bImageFromConvert = ImageIO.read(in);
 
 			ImageIO.write(bImageFromConvert, "jpg", new File(
-					"responseImage.jpg"));
+					"responseImage1.jpg"));
 
 		} catch (IOException e) {
 			System.out.println(e.getMessage());

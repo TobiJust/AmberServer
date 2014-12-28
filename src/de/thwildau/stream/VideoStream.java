@@ -12,7 +12,7 @@ import com.xuggle.xuggler.ICodec;
 
 public class VideoStream {
 
-	private static final double FRAME_RATE = 50;
+	private static final double FRAME_RATE = 1000;
 	private static final int SECONDS_TO_RUN_FOR = 10;
 
 	private HashMap<Integer, IMediaWriter> streams = new HashMap<Integer, IMediaWriter>();
@@ -21,6 +21,7 @@ public class VideoStream {
 
 	private static Dimension screenBounds;
 	private IMediaWriter writer;
+	private long startTime;
 
 	public VideoStream(int userID) {
 		// let's make a IMediaWriter to write the file.
@@ -33,11 +34,10 @@ public class VideoStream {
 		writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, 
 				screenBounds.width/2, screenBounds.height/2);
 
+		startTime = System.nanoTime();
 		streams.put(userID, writer);
 	}
 	public void writeToStream(BufferedImage image){
-
-		long startTime = System.nanoTime();
 
 
 		// convert to the right image type

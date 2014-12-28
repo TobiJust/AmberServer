@@ -11,10 +11,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import de.thwildau.model.Vehicle;
 import de.thwildau.util.ServerLogger;
 
 
@@ -82,6 +84,7 @@ public class DatabaseAccess {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 
+		System.out.println("DATABASE user ID LOGIN  "  + user_id);
 		return user_id;
 	}
 	/**
@@ -193,13 +196,14 @@ public class DatabaseAccess {
 	 */
 	public boolean addUser(String username, byte[] pass){
 		int rows = 0;
-		String query = "insert into USER(user_name, user_pw) values (?, ?)";
+		String query = "insert into USER(user_name, user_pw, is_admin) values (?, ?, ?)";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			// "user_name, user_pw);
 			// parameters start with 1
 			preparedStatement.setString(1, username);
 			preparedStatement.setBytes(2, pass);
+			preparedStatement.setInt(3, 0);
 			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
@@ -212,39 +216,46 @@ public class DatabaseAccess {
 	 * 
 	 * @return Success/Error
 	 */
-	public boolean registerVehicle(int user_id, String vehicle_id){
+	public Vehicle registerVehicle(int user_id, String vehicle_id){
 		int rows = 0;
-		String query = "Insert into VehiclePerUser(user_id, vehicle_id) values (?, ?)";
+		Vehicle vehicle = null;
+		String query = "Insert into VehiclePerUser(user_id, vehicle_id, alarm_status, add_date) values (?, ?, ?, ?)";
 		if(getVehicleName(vehicle_id) == null)
-			return false;
+			return null;
 		try {
+			long date = System.currentTimeMillis();
 			preparedStatement = connect.prepareStatement(query);
 			// "user_name, user_pw);
 			// parameters start with 1
+			preparedStatement.setInt(1, user_id);
+			preparedStatement.setString(2, vehicle_id);
+			preparedStatement.setInt(3, 0);
+			preparedStatement.setLong(4, date);
+			rows = preparedStatement.executeUpdate();
+			if(rows > 0){
+				vehicle = new Vehicle();
+				vehicle.setDate(""+date);
+				vehicle.setAlarmStatus(0);
+			}
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return vehicle;
+	}
+	public boolean unregisterVehicle(int user_id, String vehicle_id){
+		int rows = 0;
+		String query = "DELETE FROM VehiclePerUser WHERE user_id=? AND vehicle_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, user_id);
 			preparedStatement.setString(2, vehicle_id);
 			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
-		return (rows > 0) ? true : false;
-	}
-	public boolean unregisterVehicle(int user_id, String vehicle_id){
-		boolean unregister = false;
-		String query = "DELETE FROM VehiclePerUser WHERE user_id=? AND vehicle_id=?";
-		try {
-			preparedStatement = connect.prepareStatement(query);
-			preparedStatement.setInt(1, user_id);
-			preparedStatement.setString(2, vehicle_id);
-			ResultSet rs = preparedStatement.executeQuery();
-			if(rs.next())
-				unregister = true;
-			preparedStatement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
 		} 
-		return unregister;
+		return (rows > 0) ? true : false;
 	}
 
 	private String getVehicleName(String vehicle_id){
@@ -263,6 +274,28 @@ public class DatabaseAccess {
 		return name;
 	}
 
+	public boolean toggleAlarm(int user_id, String vehicle_id, boolean status){
+		System.out.println("DATABASE STATUS " + status);
+		System.out.println("DATABASE Vehicle ID " + vehicle_id);
+		int statusAsInt = status ? 1 : 0;
+		System.out.println("STATUS AS INTEGER " + statusAsInt);
+		String query = "UPDATE vehiclePerUser SET alarm_status=? WHERE user_id=? AND vehicle_id=?";
+		int rows = 0;
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, statusAsInt);
+			preparedStatement.setInt(2, user_id);
+			preparedStatement.setString(3, vehicle_id);
+			rows  = preparedStatement.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		if(rows > 0)
+			return status;
+		else
+			return !status;
+	}
 	/**
 	 * Execute Query to show all current User.
 	 * 
@@ -308,20 +341,26 @@ public class DatabaseAccess {
 	 * @param userID	Current User
 	 * @return	List of Vehicle Objects
 	 */
-	public ArrayList<String> getVehicles(int userID){
-		ArrayList<String> vehicle_ids = new ArrayList<String>();
-		String query = "SELECT Vehicle_id FROM VehiclePerUser WHERE user_id=?";
+	public ArrayList<Vehicle> getVehicles(int userID){
+		ArrayList<Vehicle> vehicleList = new ArrayList<Vehicle>();
+		String query = "SELECT Vehicle_id, Alarm_Status, Add_Date FROM VehiclePerUser WHERE user_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, userID);
 			ResultSet rs = preparedStatement.executeQuery();
-			while(rs.next())
-				vehicle_ids.add(rs.getString(1));
+			while(rs.next()){
+				Vehicle vehicle = new Vehicle();
+				vehicle.setVehicleID(rs.getString(1));
+				vehicle.setAlarmStatus(rs.getInt(2));
+				vehicle.setDate(rs.getString(3));
+				vehicleList.add(vehicle);
+			}
+			//				vehicle_ids.put(rs.getString(1), rs.getInt(2));
 			preparedStatement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 
-		return vehicle_ids;
+		return vehicleList;
 	}
 	/**
 	 * Return all Events mapped to a Vehicle Object.
@@ -329,11 +368,12 @@ public class DatabaseAccess {
 	 * @return	List of Event Objects
 	 */
 	public Object[] getEvents(String vehicleID){
-		Object[] data = new Object[2];
+		Object[] data = new Object[3];
 		ArrayList<Integer> event_ids = new ArrayList<Integer>();
 		String name = null;
+		byte[] imageInByte = null;
 		String query1 = "SELECT Event_id FROM EventPerVehicle WHERE vehicle_id=?";
-		String query2 = "SELECT Vehicle_Name FROM Vehicle WHERE vehicle_id=?";
+		String query2 = "SELECT Vehicle_Name, Vehicle_Logo FROM Vehicle WHERE vehicle_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query1);
 			preparedStatement.setString(1, vehicleID);
@@ -345,14 +385,27 @@ public class DatabaseAccess {
 			preparedStatement = connect.prepareStatement(query2);
 			preparedStatement.setString(1, vehicleID);
 			ResultSet rs2 = preparedStatement.executeQuery();
-			while(rs2.next())
+
+			while(rs2.next()){
 				name = rs2.getString(1);
+				try {
+					BufferedImage image = ImageIO.read(rs2.getBinaryStream(2));
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					ImageIO.write(image, "jpg", baos);
+					baos.flush();
+					imageInByte = baos.toByteArray();
+					baos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			preparedStatement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 
 		data[0] = name;
 		data[1] = event_ids;
+		data[2] = imageInByte;
 		return data;
 	}
 
@@ -371,7 +424,7 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 		return (rows > 0) ? true : false;
-		
+
 	}
 	/**
 	 * Return the data of an Event.

@@ -30,31 +30,34 @@ public class AmberWebServer
 			// Database Connection
 			database = new DatabaseAccess();
 
-			// Server
+			// Init Server
 			Server server = new Server(Integer.parseInt(ServerPreferences.getProperty(Constants.WEB_PORT)));
-			ServerLogger.log("Webserver " + InetAddress.getLocalHost().getHostAddress() + " listening on port: "+ ServerPreferences.getProperty(Constants.WEB_PORT), true);
+			ServerLogger.log("Webserver " + InetAddress.getLocalHost().getHostAddress() + " listening on port: "+ ServerPreferences.getProperty(Constants.WEB_PORT), Constants.DEBUG);
 
+			// Add Context
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 			context.setContextPath("/");
 			context.addServlet(new ServletHolder(new GCMNotification()),"/send");
-//			context.addServlet(new ServletHolder(new PseudostreamingServlet()),"/stream");
 
+			// Add website resources to web server
 			ResourceHandler resource_handler = new ResourceHandler();
 			resource_handler.setDirectoriesListed(false);
 			resource_handler.setResourceBase("WEB-INF");
 			resource_handler.setWelcomeFiles(new String[]{"index.html" });
 			resource_handler.setHandler(new AmberWebServerHandler());
 
+			// Manage handlers
 			HandlerList handlers = new HandlerList();
 			handlers.setHandlers(new Handler[] {resource_handler, context});
 			server.setHandler(handlers);
 			
-			// Initialize javax.websocket layer
+			// Initialize websocket layer
 			ServerContainer wscontainer = WebSocketServerContainerInitializer.configureContext(context);
 
-			// Add WebSocket endpoint to javax.websocket layer
+			// Add WebSocket endpoint to websocket layer
 			wscontainer.addEndpoint(WebSocket.class);
 
+			// Start Server
 			server.start();
 			//			server.join();
 

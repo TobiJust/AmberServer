@@ -2,6 +2,8 @@ package de.thwildau.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 import de.thwildau.server.AmberServer;
 
@@ -16,11 +18,12 @@ public class UserData implements Serializable{
 	private int userID;
 
 	public UserData prepareUserData(int userID){
-		ArrayList<String> vehicleIDList = AmberServer.getDatabase().getVehicles(userID);
-		for(String vehicleID : vehicleIDList){
-			Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
+		ArrayList<Vehicle> vehicleList = AmberServer.getDatabase().getVehicles(userID);
+		for(Vehicle vehicle : vehicleList){
+			Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicle.getVehicleID());
 			ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
-			Vehicle vehicle = new Vehicle((String)vehicleData[0]);
+			vehicle.setVehicleName((String)vehicleData[0]);
+			vehicle.setImage((byte[]) vehicleData[2]);
 			for(int eventID : eventIDList){
 				Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
 				String eventType = (String)eventData[1];
@@ -32,17 +35,21 @@ public class UserData implements Serializable{
 				Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
 				// Add events to the current Vehicle
 				vehicle.getEventList().add(event);
-
 			}
 			// Add vehicles to the current User
+			vehicle.setVehicleID(vehicle.getVehicleID());
 			this.vehicleList.add(vehicle);
-			this.userID = userID;
 		}
+		this.userID = userID;
 		return this;
 	}
 
 	public ArrayList<Vehicle> getVehicles(){
 		return this.vehicleList;
+	}
+
+	public int getUserID() {
+		return userID;
 	}
 
 }

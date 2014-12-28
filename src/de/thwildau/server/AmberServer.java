@@ -41,7 +41,7 @@ public class AmberServer{
 			acceptor.setReuseAddress(true);
 			acceptor.setHandler(AmberServerHandler.getInstance());
 			acceptor.bind(new InetSocketAddress(Integer.parseInt(ServerPreferences.getProperty(Constants.PORT))));
-			ServerLogger.log("Server " + InetAddress.getLocalHost().getHostAddress() + " listening on port: "+ ServerPreferences.getProperty(Constants.PORT), true);
+			ServerLogger.log("Server " + InetAddress.getLocalHost().getHostAddress() + " listening on port: "+ ServerPreferences.getProperty(Constants.PORT), Constants.DEBUG);
 		}
 		catch(Exception e){
 			e.printStackTrace();

@@ -21,19 +21,26 @@ import de.thwildau.stream.VideoStreamer;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
+/**
+ * 
+ * @author Tobi Just
+ *
+ */
 public class AmberServerHandler extends IoHandlerAdapter
 {
 
-	private static final boolean DEBUG = true;
 	private static final int TIMEOUT = 5 * 60 * 1000;
 
+	boolean transactionState = false;
 	private static AmberServerHandler handler = null;
-	private static OBUResponseHandler obuHandler = new OBUResponseHandler("Stream");
+	private static OBUResponseHandler obuHandler;
 	private ConcurrentHashMap<IoSession, String> sessions = new ConcurrentHashMap<IoSession, String>();
 	private ConcurrentHashMap<Integer, TimerTask> timers = new ConcurrentHashMap<Integer, TimerTask>();
+	private ConcurrentHashMap<IoSession, OBUResponseHandler> handlers = new ConcurrentHashMap<IoSession, OBUResponseHandler>();
 	private TimerTask task;
 	private VideoStreamer streamer;
 	private Thread videoThread;
+	private boolean imageState;
 
 	public static AmberServerHandler getInstance(){
 		if(handler==null)
@@ -42,24 +49,27 @@ public class AmberServerHandler extends IoHandlerAdapter
 	}
 
 	public void sessionCreated(IoSession session) {
-		ServerLogger.log("Session created..." + session, DEBUG);
+		ServerLogger.log("Session created..." + session, Constants.DEBUG);
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
-		
-//		streamer = new VideoStreamer();
-//		videoThread = new Thread(streamer);
-//		videoThread.start();
-//		StreamManager.addStream("0", streamer);
 
-		byte[] b = {(byte)0x01};
-		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+		//		streamer = new VideoStreamer();
+		//		videoThread = new Thread(streamer);
+		//		videoThread.start();
+		//		StreamManager.addStream("0", streamer);
 
+		//		byte[] b = {(byte)0x01};
+		//		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+		//		handlers.put(session, new OBUResponseHandler("Stream"));
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
-		ServerLogger.log("Session closed...", DEBUG);
+		ServerLogger.log("Session closed...", Constants.DEBUG);
 		if(session.getAttribute("user") != null){
 			setTimeout((int) session.getAttribute("user"));
 		}
+
+		//		handlers.get(session).writeToFile();
+
 	}
 
 	@Override
@@ -81,23 +91,19 @@ public class AmberServerHandler extends IoHandlerAdapter
 	@Override
 	public void messageReceived( IoSession session, Object message ) throws Exception
 	{
-
-		
 		// Check for incoming Message from OBU or Application
 		ClientMessage receivedClientMessage = null;
 
 		if(message instanceof ClientMessage)		// Application
 			receivedClientMessage = (ClientMessage) message;
 		else{ 										// OBU
-			streamer.setImage((byte[]) message);
-//			boolean transactionState = obuHandler.addImageToStream((byte[]) message);
-			
-//			if(transactionState){
-//				byte[] b = {(byte)0x01};
-//				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-//			}
-//			else
-//				ServerLogger.log("ERROR WHILE RECEIVING STREAM DATA", DEBUG);
+			boolean transactionState = handlers.get(session).addData((byte[])message); 
+			if(transactionState){
+				byte[] b = {(byte)0x01};
+				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+			}
+
+			//			Thread.sleep(200);
 
 			return;
 		}
@@ -118,6 +124,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 					cancelTimeout(user_id);
 					response = new UserData().prepareUserData(user_id);
 					session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
+					ServerLogger.log("Login succeeded: " + user_id, Constants.DEBUG);
 				}
 				else
 					session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
@@ -136,7 +143,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 			int userID = AmberServer.getDatabase().login(usernameLogin, passLogin);
 			if(userID == -1){
 				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_LOGIN);
-				ServerLogger.log("Login failed: " + usernameLogin, DEBUG);
+				ServerLogger.log("Login failed: " + usernameLogin, Constants.DEBUG);
 			}
 			// Check for GCM Registration
 			else{
@@ -152,7 +159,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 				response = response.prepareUserData(userID);
 				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);
 				session.setAttribute("user", userID);
-				ServerLogger.log("Login success: " + usernameLogin, DEBUG);
+				ServerLogger.log("Login success: " + usernameLogin, Constants.DEBUG);
 				//			}
 			}
 			session.write(responseMessage);
@@ -164,12 +171,12 @@ public class AmberServerHandler extends IoHandlerAdapter
 			// Registration failed
 			if(!queryRegister){
 				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER);
-				ServerLogger.log("Registration failed: " + usernameRegister, DEBUG);
+				ServerLogger.log("Registration failed: " + usernameRegister, Constants.DEBUG);
 			}
 			// Registration succeeded
 			else{
 				responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER, Constants.SUCCESS_REGISTER);
-				ServerLogger.log("Registration success: " + usernameRegister, DEBUG);				
+				ServerLogger.log("Registration success: " + usernameRegister, Constants.DEBUG);				
 			}
 			session.write(responseMessage);
 			break;
@@ -187,17 +194,16 @@ public class AmberServerHandler extends IoHandlerAdapter
 			userID = (int) request[0];
 			String vehicleID = (String) request[1];
 
-			boolean queryAddVehicle = AmberServer.getDatabase().registerVehicle(userID, vehicleID);
-			if(!queryAddVehicle){
+			Vehicle vehicle = AmberServer.getDatabase().registerVehicle(userID, vehicleID);
+			if(vehicle == null){
 				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER_VEHICLE);
-				ServerLogger.log("Add Vehicle failed: " + userID, DEBUG);
+				ServerLogger.log("Add Vehicle failed: " + userID, Constants.DEBUG);
 			}
 			// Add Vehicle succeeded
 			else{
-				Vehicle response = new Vehicle();
-				response = response.prepareVehicle(vehicleID);
-				responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER_VEHICLE, response);
-				ServerLogger.log("Add Vehicle succeeded: " + userID, DEBUG);				
+				vehicle = vehicle.prepareVehicle(vehicleID);
+				responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER_VEHICLE, vehicle);
+				ServerLogger.log("Add Vehicle succeeded: " + userID, Constants.DEBUG);				
 			}
 			session.write(responseMessage);
 			break;
@@ -205,6 +211,35 @@ public class AmberServerHandler extends IoHandlerAdapter
 			request = (Object[]) receivedClientMessage.getContent();
 			userID = (int) request[0];
 			vehicleID = (String) request[1];
+			int position = (int) request[2];
+			System.out.println("POSITION UNREGISTER " + position);
+			boolean queryUnregisterVehicle = AmberServer.getDatabase().unregisterVehicle(userID, vehicleID);
+			if(!queryUnregisterVehicle){
+				responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, -1);
+				ServerLogger.log("Unregister Vehicle failed for User: " + userID, Constants.DEBUG);
+			}
+			// Unregister Vehicle succeeded
+			else{
+				responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, position);
+				ServerLogger.log("Unregister Vehicle succeeded for User: " + userID, Constants.DEBUG);				
+			}
+			session.write(responseMessage);
+			break;
+		case TOGGLE_ALARM:
+			request = (Object[]) receivedClientMessage.getContent();
+			userID = (int) request[0];
+			vehicleID = (String) request[1];
+			boolean status = (boolean) request[2];
+			position = (int) request[3];
+			boolean queryToggleAlarm = AmberServer.getDatabase().toggleAlarm(userID, vehicleID, status);
+			Object[] responseData = {queryToggleAlarm, position};
+			System.out.println("User ID " + userID);
+			System.out.println("Vehicle ID " + vehicleID);
+			System.out.println("Status " + status);
+			System.out.println("View Position " + position);
+			responseMessage = new ClientMessage(ClientMessage.Ident.TOGGLE_ALARM, responseData);
+			ServerLogger.log("Toggle Alarm for User: " + userID + " " + queryToggleAlarm, Constants.DEBUG);	
+			session.write(responseMessage);
 			break;
 		default:
 			break;
@@ -241,16 +276,16 @@ public class AmberServerHandler extends IoHandlerAdapter
 	 * @param user_id Current User
 	 */
 	public void setTimeout(int user_id){
-		ServerLogger.log("Set Timeout Countdown to 5 min for User " + user_id, DEBUG);
+		ServerLogger.log("Set Timeout Countdown to 5 min for User " + user_id, Constants.DEBUG);
 		Timer timer = new Timer();
 		task = new TimerTask() {			
 			@Override
 			public void run() {
-				ServerLogger.log("Logout for User " + user_id, DEBUG);
+				ServerLogger.log("Logout for User " + user_id, Constants.DEBUG);
 				AmberServer.getDatabase().logout(user_id);
 			}
 		};
-		// Logout in 5 minutes
+		// Logout in in given time
 		timer.schedule(task, TIMEOUT);
 		timers.put(user_id, task);
 	}

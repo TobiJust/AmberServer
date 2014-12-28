@@ -25,83 +25,20 @@ import de.thwildau.util.ServerLogger;
 
 public class AmberWebServerHandler extends AbstractHandler{
 
-	private static final boolean DEBUG = true;
-
+	/**
+	 * Handle requests to the web server 
+	 */
 	public void handle(String target,Request baseRequest,HttpServletRequest request,HttpServletResponse response)
 			throws IOException, ServletException{
 
 		// allow cross origin
-		if(DEBUG)
+		if(Constants.DEBUG)
 			response.addHeader("Access-Control-Allow-Origin", "*");
 
 		try{
 			String requestIdent = request.getPathInfo().split("/")[1];
 
 			switch(requestIdent){
-			case "login":
-				String loginData = request.getParameter("data");
-				String usernameLogin = parseLoginRequest(loginData)[0];
-				//TODO: get hash value from Web App
-				byte[] passLogin = passwordToHash(parseLoginRequest(loginData)[1]);
-				// Database validation
-				// Check for User and Password
-				int user_id = AmberServer.getDatabase().login(usernameLogin, passLogin);
-				if(user_id == -1){
-					response.sendError(500, Constants.ERROR_LOGIN);
-					ServerLogger.log("Login from Web App failed: " + usernameLogin, DEBUG);
-				}
-				// Everything ok - Login succeeded
-				else{
-					UserData responseData = new UserData();
-					responseData = responseData.prepareUserData(user_id);
-					response.setHeader("Content-Type", "text/plain");
-					PrintWriter writer = response.getWriter();
-					writer.write(convertToJSON(responseData));
-					writer.close();
-					ServerLogger.log("Login from Web App succeeded: " + usernameLogin, DEBUG);
-				}
-				break;
-			case "logout":
-				String logoutData = request.getParameter("data");
-				String usernameLogout = parseLoginRequest(logoutData)[0];
-				// Database validation
-				// Check for User and Password
-				//				user_id = AmberServer.getDatabase().logout(usernameLogout);
-				ServerLogger.log("Logout from Web App succeeded", DEBUG);
-				break;
-			case "requestDataPackage":
-				int userID = Integer.parseInt(request.getParameter("userID"));
-				UserData responseData = new UserData();
-				responseData = responseData.prepareUserData(userID);
-				if(true)
-					response.sendError(500, Constants.ERROR_RECORD);
-				else{
-					response.setHeader("Content-Type", "text/plain");
-					PrintWriter writer = response.getWriter();
-					writer.write(convertToJSON(responseData));
-					writer.close();
-					ServerLogger.log("Request from Web App", DEBUG);
-				}
-				break;
-			case "send":
-				ServerLogger.log("Send Notification to Devices", DEBUG);
-				break;
-			case "startRecord":
-				userID = Integer.parseInt(request.getParameter("userID"));
-				int vehicleID = Integer.parseInt(request.getParameter("vehicleID"));
-				int cameraID = Integer.parseInt(request.getParameter("cameraID"));	
-				response.setHeader("Content-Type", "text/plain");
-				PrintWriter writer = response.getWriter();
-				writer.write("Starting to record from camera " + cameraID);
-				writer.close();
-				ServerLogger.log("Starting to record from camera " + cameraID + " on Vehicle "
-						+ vehicleID + " for User " + userID, DEBUG);
-				break;
-			case "stopRecord":
-				ServerLogger.log("Video recorded and processed, ready to download.", DEBUG);
-				break;
-			case "sendCommand":
-			case "website":
 			case "websocket":
 				break;
 			default:

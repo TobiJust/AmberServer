@@ -1,8 +1,12 @@
 package de.thwildau.model;
 
-import java.awt.image.BufferedImage;
 import java.io.Serializable;
 
+/**
+ * 
+ * @author Tobi Just
+ *
+ */
 public class Event implements Serializable {
 	private static final long serialVersionUID = 8679932140958446049L;
 
