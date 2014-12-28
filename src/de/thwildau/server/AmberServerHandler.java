@@ -181,10 +181,15 @@ public class AmberServerHandler extends IoHandlerAdapter
 			session.write(responseMessage);
 			break;
 		case EVENT_REQUEST:
-			String eventID = (String) receivedClientMessage.getContent();
-			Event ev = new Event();
-			ev.setVehicleID(eventID);
-			session.write(new ClientMessage(ClientMessage.Ident.EVENT, ev));
+			int eventID = (int) receivedClientMessage.getContent();
+			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
+			String eventType = (String)eventData[1];
+			String eventTime = (String)eventData[2];
+			double eventLat = (double)eventData[3];
+			double eventLon = (double)eventData[4];
+			byte[] eventImage = (byte[]) eventData[5];	// EventImage
+			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
+			session.write(new ClientMessage(ClientMessage.Ident.EVENT, event));
 			break;
 		case NOTIFICATION:
 			new SendNotification("GCM_Notification from OBU");

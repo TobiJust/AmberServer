@@ -39,6 +39,8 @@ public class AmberWebServerHandler extends AbstractHandler{
 			String requestIdent = request.getPathInfo().split("/")[1];
 
 			switch(requestIdent){
+			case "send":
+				break;
 			case "websocket":
 				break;
 			default:
