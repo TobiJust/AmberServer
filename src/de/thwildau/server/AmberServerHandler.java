@@ -192,7 +192,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 			session.write(new ClientMessage(ClientMessage.Ident.EVENT, event));
 			break;
 		case NOTIFICATION:
-			new SendNotification("GCM_Notification from OBU");
+//			new SendNotification("GCM_Notification from OBU");
 			break;
 		case REGISTER_VEHICLE:
 			Object[] request = (Object[]) receivedClientMessage.getContent();

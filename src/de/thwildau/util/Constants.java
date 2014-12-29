@@ -26,10 +26,14 @@ public class Constants {
 	
 	public static final String ARG_GCM_SEND = "send";	
 	public static final String ARG_MESSAGE = "message";
+	public static final String ARG_USERID = "userID";
+	public static final String ARG_TYPE = "type";
 	public static final String ARG_PORT = "p";
 	public static final String ARG_DEFAULT = "defaults";	
 		
 	public static final String DATA_FOLDER = "data/";
+
+
 
 
 }

@@ -11,15 +11,17 @@ import de.thwildau.util.ServerPreferences;
 
 public class SendNotification {
 
-	public SendNotification(String message)
+	public SendNotification(String type, String message, int userID)
 	{
 		try
 		{
 			String myUrl = "http://"+InetAddress.getLocalHost().getHostAddress()+":"+
 					ServerPreferences.getProperty(Constants.WEB_PORT) +"/" +
 					Constants.ARG_GCM_SEND + "?" +
-					Constants.ARG_MESSAGE + "=" +
-					message;
+					Constants.ARG_MESSAGE + "=" + message + "&" +
+					Constants.ARG_USERID + "="  + userID  + "&" + 
+					Constants.ARG_TYPE + "="  + type;
+			System.out.println(myUrl);
 			// if your url can contain weird characters you will want to 
 			// encode it here, something like this:
 			// myUrl = URLEncoder.encode(myUrl, "UTF-8");

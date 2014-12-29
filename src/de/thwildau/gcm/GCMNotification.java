@@ -44,9 +44,11 @@ public class GCMNotification extends HttpServlet {
 		try {
 
 			String userMessage = request.getParameter("message");
+			String type = request.getParameter("type");
+			String userID = request.getParameter("userID");
 			Sender sender = new Sender(GOOGLE_SERVER_KEY);
 			Message message = new Message.Builder().timeToLive(30)
-					.delayWhileIdle(true).addData(MESSAGE_KEY, userMessage)
+					.delayWhileIdle(true).addData(MESSAGE_KEY, userMessage).addData("type", type).addData("userID", userID)
 					.build();
 			//				Set regIdSet = readFromFile();
 			//				regIdList.addAll(regIdSet);

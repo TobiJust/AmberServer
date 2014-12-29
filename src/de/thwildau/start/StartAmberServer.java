@@ -50,7 +50,7 @@ public class StartAmberServer {
 					ServerLogger.log(AmberServer.getDatabase().showAllUser(), true);
 					break;
 				case "send":
-					new SendNotification("6");
+					new SendNotification("Oil", "Your_Oil", 3);
 //					ServerLogger.log(AmberServer.getDatabase().getGCMRegIds().toString(), true);
 					ServerLogger.log("Send Notification", true);
 					break;
