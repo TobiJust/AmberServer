@@ -21,21 +21,21 @@ public class UserData implements Serializable{
 		ArrayList<Vehicle> vehicleList = AmberServer.getDatabase().getVehicles(userID);
 		for(Vehicle vehicle : vehicleList){
 			Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicle.getVehicleID());
-			ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
+//			ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 			vehicle.setVehicleName((String)vehicleData[0]);
 			vehicle.setImage((byte[]) vehicleData[2]);
-			for(int eventID : eventIDList){
-				Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
-				String eventType = (String)eventData[1];
-				String eventTime = (String)eventData[2];
-				double eventLat = (double)eventData[3];
-				double eventLon = (double)eventData[4];
-				byte[] eventImage = (byte[]) eventData[5];	// EventImage
-
-				Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
-				// Add events to the current Vehicle
-				vehicle.getEventList().add(event);
-			}
+//			for(int eventID : eventIDList){
+//				Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
+//				String eventType = (String)eventData[1];
+//				String eventTime = (String)eventData[2];
+//				double eventLat = (double)eventData[3];
+//				double eventLon = (double)eventData[4];
+//				byte[] eventImage = (byte[]) eventData[5];	// EventImage
+//
+//				Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
+//				// Add events to the current Vehicle
+//				vehicle.getEventList().add(event);
+//			}
 			// Add vehicles to the current User
 			vehicle.setVehicleID(vehicle.getVehicleID());
 			this.vehicleList.add(vehicle);

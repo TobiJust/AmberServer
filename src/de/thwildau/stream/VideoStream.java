@@ -3,8 +3,17 @@ package de.thwildau.stream;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
 
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
@@ -12,18 +21,24 @@ import com.xuggle.xuggler.ICodec;
 
 public class VideoStream {
 
-	private static final double FRAME_RATE = 1000;
+	private static final double FRAME_RATE = 135;
 	private static final int SECONDS_TO_RUN_FOR = 10;
 
 	private HashMap<Integer, IMediaWriter> streams = new HashMap<Integer, IMediaWriter>();
 
-	private static final String outputFilename = "mydesktop_"+(int)FRAME_RATE+"fps"+SECONDS_TO_RUN_FOR+"s.mp4";
+	private static String outputFilename = "mydesktop_"+(int)FRAME_RATE+"fps"+SECONDS_TO_RUN_FOR+"s.mp4";
 
 	private static Dimension screenBounds;
 	private IMediaWriter writer;
 	private long startTime;
 
-	public VideoStream(int userID) {
+	public VideoStream(String vehicleID) {
+
+		// build path and filename
+		Date date = new Date();
+		if((new File("datastore//"+vehicleID)).mkdirs())			
+			outputFilename = "Date.mp4";
+		
 		// let's make a IMediaWriter to write the file.
 		writer = ToolFactory.makeWriter(outputFilename);
 
@@ -35,7 +50,7 @@ public class VideoStream {
 				screenBounds.width/2, screenBounds.height/2);
 
 		startTime = System.nanoTime();
-		streams.put(userID, writer);
+		streams.put(0, writer);
 	}
 	public void writeToStream(BufferedImage image){
 
@@ -45,25 +60,18 @@ public class VideoStream {
 				BufferedImage.TYPE_3BYTE_BGR);
 
 		// encode the image to stream #0
-		writer.encodeVideo(0, bgrScreen, System.nanoTime() - startTime, 
+		streams.get(0).encodeVideo(0, bgrScreen, System.nanoTime() - startTime, 
 				TimeUnit.NANOSECONDS);
 
 		// sleep for frame rate milliseconds
-		try {
-			Thread.sleep((long) (1000 / FRAME_RATE));
-		} 
-		catch (InterruptedException e) {
-			// ignore
-		}
-
-		// tell the writer to close and write the trailer if  needed
-		//		writer.close();
+		//		try {
+		//			Thread.sleep((long) (1000 / FRAME_RATE));
+		//		} 
+		//		catch (InterruptedException e) {
+		//			// ignore
+		//		}
 
 	}
-	//	public void startRecording(int userID){
-	//		IMediaWriter streamWriter = streams.get(userID);
-	//		streamWriter.encodeVideo(0, img, System.nanoTime()-, arg3);
-	//	}
 
 	public static BufferedImage convertToType(BufferedImage sourceImage, int targetType) {
 
@@ -82,9 +90,31 @@ public class VideoStream {
 
 		return image;
 	}
-	
+
+	/**
+	 * Tell the writer to close and write the video to the file system.
+	 */
 	public void getVideoStream(){
-		writer.close();
+		streams.get(0).close();
+	}
+	public void writeToStream(byte[] imageInByte) {
+
+		try {
+			// convert byte array to BufferedImage
+			InputStream in = new ByteArrayInputStream(imageInByte);
+			BufferedImage image;
+			image = ImageIO.read(in);
+			// convert to the right image type
+			BufferedImage bgrScreen = convertToType(image, 
+					BufferedImage.TYPE_3BYTE_BGR);
+			// encode the image to stream #0
+			writer.encodeVideo(0, bgrScreen, System.nanoTime() - startTime, 
+					TimeUnit.NANOSECONDS);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }

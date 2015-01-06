@@ -1,6 +1,7 @@
 package de.thwildau.server;
 
 
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,7 +10,6 @@ import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 
-import de.thwildau.gcm.SendNotification;
 import de.thwildau.info.ClientMessage;
 import de.thwildau.info.OBUMessage;
 import de.thwildau.model.Event;
@@ -17,7 +17,7 @@ import de.thwildau.model.User;
 import de.thwildau.model.UserData;
 import de.thwildau.model.Vehicle;
 import de.thwildau.obu.OBUResponseHandler;
-import de.thwildau.stream.VideoStreamer;
+import de.thwildau.obu.model.FrameObject;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
@@ -33,14 +33,10 @@ public class AmberServerHandler extends IoHandlerAdapter
 
 	boolean transactionState = false;
 	private static AmberServerHandler handler = null;
-	private static OBUResponseHandler obuHandler;
 	private ConcurrentHashMap<IoSession, String> sessions = new ConcurrentHashMap<IoSession, String>();
 	private ConcurrentHashMap<Integer, TimerTask> timers = new ConcurrentHashMap<Integer, TimerTask>();
-	private ConcurrentHashMap<IoSession, OBUResponseHandler> handlers = new ConcurrentHashMap<IoSession, OBUResponseHandler>();
+	private ConcurrentHashMap<IoSession, OBUResponseHandler> obuHandlers = new ConcurrentHashMap<IoSession, OBUResponseHandler>();
 	private TimerTask task;
-	private VideoStreamer streamer;
-	private Thread videoThread;
-	private boolean imageState;
 
 	public static AmberServerHandler getInstance(){
 		if(handler==null)
@@ -52,14 +48,15 @@ public class AmberServerHandler extends IoHandlerAdapter
 		ServerLogger.log("Session created..." + session, Constants.DEBUG);
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
 
-		//		streamer = new VideoStreamer();
-		//		videoThread = new Thread(streamer);
-		//		videoThread.start();
-		//		StreamManager.addStream("0", streamer);
 
-		//		byte[] b = {(byte)0x01};
+		//		try {
+		//			Thread.sleep(2000);
+		//		} catch (InterruptedException e) {
+		//			e.printStackTrace();
+		//		}
+		////		byte[] b = {(byte)0x01};
 		//		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-		//		handlers.put(session, new OBUResponseHandler("Stream"));
+		//		handlers.put(session, new OBUResponseHandler());
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
@@ -67,9 +64,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 		if(session.getAttribute("user") != null){
 			setTimeout((int) session.getAttribute("user"));
 		}
-
-		//		handlers.get(session).writeToFile();
-
 	}
 
 	@Override
@@ -97,17 +91,19 @@ public class AmberServerHandler extends IoHandlerAdapter
 		if(message instanceof ClientMessage)		// Application
 			receivedClientMessage = (ClientMessage) message;
 		else{ 										// OBU
-			boolean transactionState = handlers.get(session).addData((byte[])message); 
-			if(transactionState){
-				byte[] b = {(byte)0x01};
-				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-			}
+			interpretData((byte[]) message, session);
+			//			boolean transactionState = handlers.get(session).addData((byte[])message); 
+			//			if(transactionState){
+			//				byte[] b = {(byte)0x01};
+			//				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+			//			}
 
 			//			Thread.sleep(200);
 
 			return;
 		}
 
+		System.out.println(receivedClientMessage.getId());
 		switch(receivedClientMessage.getId()){
 		case LOGIN_CHECK:
 			try{
@@ -180,22 +176,29 @@ public class AmberServerHandler extends IoHandlerAdapter
 			}
 			session.write(responseMessage);
 			break;
+		case EVENT_DETAIL:
 		case EVENT_REQUEST:
-			int eventID = (int) receivedClientMessage.getContent();
+			Object[] request = (Object[]) receivedClientMessage.getContent();
+			int eventID = (int) request[0];
+			String obuID = (String) request[1];
+			System.out.println("EVENT ID " + eventID);
+			System.out.println("OBU ID " + obuID);
 			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
+			String vehicleName = AmberServer.getDatabase().getVehicle(obuID);
 			String eventType = (String)eventData[1];
 			String eventTime = (String)eventData[2];
 			double eventLat = (double)eventData[3];
 			double eventLon = (double)eventData[4];
 			byte[] eventImage = (byte[]) eventData[5];	// EventImage
-			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage);
-			session.write(new ClientMessage(ClientMessage.Ident.EVENT, event));
+			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage, vehicleName);
+			event.setVehicleID(obuID);
+			session.write(new ClientMessage(receivedClientMessage.getId(), event));
 			break;
 		case NOTIFICATION:
-//			new SendNotification("GCM_Notification from OBU");
+			//			new SendNotification("GCM_Notification from OBU");
 			break;
 		case REGISTER_VEHICLE:
-			Object[] request = (Object[]) receivedClientMessage.getContent();
+			request = (Object[]) receivedClientMessage.getContent();
 			userID = (int) request[0];
 			String vehicleID = (String) request[1];
 
@@ -238,19 +241,29 @@ public class AmberServerHandler extends IoHandlerAdapter
 			position = (int) request[3];
 			boolean queryToggleAlarm = AmberServer.getDatabase().toggleAlarm(userID, vehicleID, status);
 			Object[] responseData = {queryToggleAlarm, position};
-			System.out.println("User ID " + userID);
-			System.out.println("Vehicle ID " + vehicleID);
-			System.out.println("Status " + status);
-			System.out.println("View Position " + position);
 			responseMessage = new ClientMessage(ClientMessage.Ident.TOGGLE_ALARM, responseData);
 			ServerLogger.log("Toggle Alarm for User: " + userID + " " + queryToggleAlarm, Constants.DEBUG);	
+			session.write(responseMessage);
+			break;
+		case GET_EVENTLIST_BACKPRESS:
+		case GET_EVENTLIST:
+			vehicleID = (String) receivedClientMessage.getContent();
+			ArrayList<Event> events = Vehicle.prepareEventList(vehicleID);
+			responseMessage = new ClientMessage(receivedClientMessage.getId(), events);
+			System.out.println("ID " + vehicleID + " EVENTSIZE " + events.size());
+			session.write(responseMessage);
+			break;
+		case GET_VEHICLELIST_BACKPRESS:
+			userID = (int) receivedClientMessage.getContent();
+			UserData response = new UserData();
+			response = response.prepareUserData(userID);
+			responseMessage = new ClientMessage(ClientMessage.Ident.GET_VEHICLELIST_BACKPRESS, response.getVehicles());
 			session.write(responseMessage);
 			break;
 		default:
 			break;
 		}
 	}
-
 	@Override
 	public void sessionIdle( IoSession session, IdleStatus status ) throws Exception
 	{
@@ -262,7 +275,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 	private synchronized void closeSession(IoSession session){
 		try{
 			//			lock.lock();
-			obuHandler.writeToFile();
+			obuHandlers.get(session).writeToFile();
 			sessions.remove(session);
 			session.close(true);
 		}
@@ -273,6 +286,28 @@ public class AmberServerHandler extends IoHandlerAdapter
 	}
 	public static void clearInstance(){
 		handler = null;
+	}
+
+
+	private void interpretData(byte[] data, IoSession session) {
+		FrameObject frame = new FrameObject();
+		frame.append(data, 0);
+		try {
+			if(frame.getMessageID() == FrameObject.DEVICE){
+				OBUResponseHandler.handlers.put(frame.getDeviceID(), session);
+				obuHandlers.put(session, new OBUResponseHandler());
+			}
+			else{
+				boolean transactionState = obuHandlers.get(session).addData(data);
+				if(transactionState){
+					byte[] b = {(byte)0x01};
+					session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

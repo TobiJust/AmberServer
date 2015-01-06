@@ -1,6 +1,7 @@
 package de.thwildau.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * 
@@ -8,26 +9,41 @@ import java.io.Serializable;
  *
  */
 public class Event implements Serializable {
+	
 	private static final long serialVersionUID = 8679932140958446049L;
 
+	private int id;
 	private String eventType;
 	private String timeStamp;
 	private String vehicleID;
+	private String vehicleName;
 	private double lat;
 	private double lon;
 	private byte[] eventImage;
-
-	public Event() {
-		// TODO Auto-generated constructor stub
-	}
 	
+
 	public Event(String eventType, String eventTime, double eventLat,
-			double eventLon, byte[] eventImage) {
+			double eventLon, byte[] eventImage, String vehicleName) {
 		this.eventType = eventType;
 		this.timeStamp = eventTime;
 		this.lat = eventLat;
 		this.lon = eventLon;
 		this.eventImage = eventImage;
+		this.vehicleName = vehicleName;
+	}
+
+	public Event(int eventID, String eventType, String eventTime) {
+		this.id = eventID;
+		this.eventType = eventType;
+		this.timeStamp = eventTime;
+	}
+
+	public String getVehicleName() {
+		return vehicleName;
+	}
+
+	public void setVehicleName(String vehicleName) {
+		this.vehicleName = vehicleName;
 	}
 
 	public void setVehicleID(String id){
@@ -60,6 +76,21 @@ public class Event implements Serializable {
 	public String getEventType(){
 		return this.eventType;
 	}
-
-
+	public byte[] getEventImage() {
+		return eventImage;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	
+	
+	@Override
+	public String toString() {
+		return "Event [eventType=" + eventType + ", timeStamp=" + timeStamp
+				+ ", vehicleID=" + vehicleID + ", lat=" + lat + ", lon=" + lon
+				+ ", eventImage=" + Arrays.toString(eventImage) + "]";
+	}
 }

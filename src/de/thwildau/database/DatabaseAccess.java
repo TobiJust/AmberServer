@@ -11,18 +11,18 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import de.thwildau.model.Vehicle;
+import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
 
 public class DatabaseAccess {
 
-	protected static final boolean DEBUG = true;
+	;
 	// JDBC
 	private Connection connect = null;
 	private Statement statement = null;
@@ -46,7 +46,7 @@ public class DatabaseAccess {
 					if (!connect.isClosed() && connect != null) { 
 						close(null); 
 						if (connect.isClosed()) 
-							ServerLogger.log("Connection to Database closed", DEBUG); 
+							ServerLogger.log("Connection to Database closed", Constants.DEBUG); 
 					} 
 				} catch (SQLException e) { 
 					e.printStackTrace(); 
@@ -60,7 +60,7 @@ public class DatabaseAccess {
 	 * 
 	 * @param username	Username from Login
 	 * @param pass	Password from Login as Hash MD5
-	 * @return Validation of Login (true if User/Password in Database)
+	 * @return User ID from database to handle future requests.
 	 */
 	public int login(String username, byte[] pass) {
 		int user_id = -1;
@@ -84,7 +84,46 @@ public class DatabaseAccess {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 
-		System.out.println("DATABASE user ID LOGIN  "  + user_id);
+		return user_id;
+	}
+	/**
+	 * Login Check from Web App. It looks for correct user name and password as well as if the user
+	 * is authorized with an admin flag.
+	 * If is_admin:
+	 * 		-1 - Wrong Username or Password
+	 * 		 0 - User not allowed
+	 * 		 1 - Access granted for User
+	 * 
+	 * @param username Username from Web App Login
+	 * @param pass Password from Web App Login as Hash MD5
+	 * @return User ID from database to handle future requests.
+	 */
+	public int adminLogin(String username, byte[] pass) {
+		int user_id = -1;
+		int is_admin = -1;
+		String query = "SELECT user_id, is_admin FROM user WHERE user_name=? AND user_pw=?";
+		String query2 = "INSERT INTO session (user_id, time_stamp) values (?, ?)";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setString(1, username);
+			preparedStatement.setBytes(2, pass);
+			ResultSet rs = preparedStatement.executeQuery();
+			if(rs.next()){
+				user_id = rs.getInt(1);
+				is_admin = rs.getInt(2);
+				preparedStatement = connect.prepareStatement(query2);
+				preparedStatement.setInt(1, user_id);
+				preparedStatement.setLong(2, System.currentTimeMillis());
+				preparedStatement.executeUpdate();
+			}
+			else
+				user_id = -1;
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		if(is_admin == 0)
+			user_id = -2;
 		return user_id;
 	}
 	/**
@@ -148,7 +187,6 @@ public class DatabaseAccess {
 	 * @return validation of GCM Registration
 	 */
 	public void registerGCM(int user_id, String regid) {
-		//		String query = "insert into GCM (user_id, gcm_regid) values (?, ?)";
 		String query = "INSERT INTO GCM (user_id, gcm_regid) SELECT ?, ?"
 				+ "WHERE NOT EXISTS (SELECT 1 FROM GCM WHERE user_id = ? and gcm_regid = ?);";
 		try {
@@ -275,10 +313,7 @@ public class DatabaseAccess {
 	}
 
 	public boolean toggleAlarm(int user_id, String vehicle_id, boolean status){
-		System.out.println("DATABASE STATUS " + status);
-		System.out.println("DATABASE Vehicle ID " + vehicle_id);
 		int statusAsInt = status ? 1 : 0;
-		System.out.println("STATUS AS INTEGER " + statusAsInt);
 		String query = "UPDATE vehiclePerUser SET alarm_status=? WHERE user_id=? AND vehicle_id=?";
 		int rows = 0;
 		try {
@@ -307,7 +342,7 @@ public class DatabaseAccess {
 			statement = connect.createStatement();
 			ResultSet rs = statement.executeQuery( "SELECT * FROM USER;" );
 			result += writeResultSet(rs);
-			close(rs);
+			//			close(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -319,14 +354,15 @@ public class DatabaseAccess {
 	 * 
 	 * @return List of all Registration Ids.
 	 */
-	public List<String> getGCMRegIds(){
+	public List<String> getGCMRegIds(int user_id){
+		String query = "SELECT gcm_regid FROM GCM WHERE user_id=?;"; 
 		List<String> regIds = new ArrayList<String>();
 		try {
-			statement = connect.createStatement();
-			ResultSet rs = statement.executeQuery( "SELECT gcm_regid FROM GCM;" );
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, user_id);
+			ResultSet rs = preparedStatement.executeQuery();
 			ResultSetMetaData rm = rs.getMetaData();
 			String colName = rm.getColumnName(1);
-
 			while (rs.next())
 				regIds.add(rs.getString(colName));
 
@@ -361,6 +397,55 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		} 
 		return vehicleList;
+	}
+
+
+	public int addEvent(String vehicleID, String type, String time, String lat, String lon, byte[] image){
+		int eventID = -1;
+		String query = "INSERT INTO event (event_type, event_time, event_lat, event_lon, event_image) "
+				+ "values (?, ?, ?, ?, ?)";
+		String query2 = "INSERT INTO eventPerVehicle (vehicle_id, event_id) values (?,?)";
+		String query3 = "select last_insert_rowid();";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setString(1, type);
+			preparedStatement.setString(2, time);
+			preparedStatement.setString(3, lat);
+			preparedStatement.setString(4, lon);
+			preparedStatement.setBytes(5, image);
+			int rows = preparedStatement.executeUpdate();
+			if(rows > 0){
+				ResultSet rs = connect.prepareStatement(query3).executeQuery();
+				while (rs.next())
+					eventID = rs.getInt(1);
+				System.out.println("EVENT ID " + eventID);
+				if(eventID >= 0){
+					preparedStatement = connect.prepareStatement(query2);
+					preparedStatement.setString(1, vehicleID);
+					preparedStatement.setInt(2, eventID);
+					preparedStatement.executeUpdate();
+				}
+			}
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return eventID;
+	}
+	public String getVehicle(String vehicleID) {
+		String vehicleName = "";
+		String query = "SELECT vehicle_name FROM vehicle WHERE vehicle_id=?";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setString(1, vehicleID);
+			ResultSet rs1 = preparedStatement.executeQuery();
+			while(rs1.next())
+				vehicleName = rs1.getString(1);
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return vehicleName;
 	}
 	/**
 	 * Return all Events mapped to a Vehicle Object.
@@ -409,6 +494,22 @@ public class DatabaseAccess {
 		return data;
 	}
 
+	public ArrayList<Integer> getNotificationUsers(String obuID) {
+		ArrayList<Integer> user = new ArrayList<Integer>();
+		String query = "SELECT user_id FROM VehiclePerUser WHERE vehicle_id=? AND alarm_status=1";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setString(1, obuID);
+			ResultSet rs = preparedStatement.executeQuery();
+			while (rs.next())
+				user.add(rs.getInt(1));
+			//			close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}		
+		return user;
+	}
+
 	public boolean storeVideostream(int userID, String pathToVideo){
 		int rows = 0;
 		String query = "INSERT INTO video (user_id, video_path, time_stamp) values (?, ?, ?)";
@@ -447,12 +548,12 @@ public class DatabaseAccess {
 					eventData[i] = rs.getObject(i+1);
 				try {
 					BufferedImage image = ImageIO.read(rs.getBinaryStream(eventData.length));
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					ImageIO.write(image, "jpg", baos);
-					baos.flush();
-					byte[] imageInByte = baos.toByteArray();
-					baos.close();
-					eventData[i] = imageInByte;
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						ImageIO.write(image, "jpg", baos);
+						baos.flush();
+						byte[] imageInByte = baos.toByteArray();
+						baos.close();
+						eventData[i] = imageInByte;
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -500,4 +601,6 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 	}
+
+	
 }

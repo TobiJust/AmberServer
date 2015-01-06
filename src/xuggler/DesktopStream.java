@@ -9,27 +9,16 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.websocket.Session;
 
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.xuggler.ICodec;
-
+import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
 public class DesktopStream extends Thread{
 
-	private static final double FRAME_RATE = 25;
-
-	private static final int SECONDS_TO_RUN_FOR = 300;
-
-	//	private static final String outputFilename = "mydesktop_"+(int)FRAME_RATE+"fps"+SECONDS_TO_RUN_FOR+"s.mp4";
-
-	private static final boolean DEBUG = true;
-
+	private static final double FRAME_RATE = 50;
 	private static Dimension screenBounds;
 
 	private Session session;
@@ -49,7 +38,7 @@ public class DesktopStream extends Thread{
 		}
 	}
 	public void run(){
-		ServerLogger.log("Stream started for Session " + session.getId(), DEBUG);
+		ServerLogger.log("Stream started for Session " + session.getId() + " and OBU " + vehicleID, Constants.DEBUG);
 		// let's make a IMediaWriter to write the file.
 		//		final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
 
@@ -104,7 +93,7 @@ public class DesktopStream extends Thread{
 
 	public void stopStream(){
 		this.running = false;
-		ServerLogger.log("Stream finished for Session " + session.getId(), DEBUG);
+		ServerLogger.log("Stream finished for Session " + session.getId() + " and OBU " + vehicleID, Constants.DEBUG);
 
 	}
 

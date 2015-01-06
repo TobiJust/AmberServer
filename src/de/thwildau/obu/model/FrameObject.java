@@ -5,8 +5,9 @@ import java.util.List;
 
 public class FrameObject {
 
-	private static final int PAYLOAD_L = 4;
-	private static final int PAYLOAD_H = 3;
+	protected static final int PAYLOAD_L = 4;
+	protected static final int PAYLOAD_H = 3;
+	public static final byte DEVICE = 9;
 	private ArrayList<Byte> frame;
 
 	public FrameObject(){
@@ -28,7 +29,7 @@ public class FrameObject {
 	}
 
 	public boolean checkLength(){
-		if(!checkFrameBegin() || frame.size() < 5)
+		if(!checkFrameBegin() || !checkFrameEnd() || frame.size() < 5)
 			return false;
 
 		int length = bodyLength();
@@ -43,14 +44,20 @@ public class FrameObject {
 
 		return frame.get(0) == (byte)0xFF && frame.get(1) == (byte)0x00 && frame.get(2) == (byte)0xFF;
 	}
+	public boolean checkFrameEnd(){
+		int size = frame.size();
+		if(size < 3)
+			return false;
 
+		return frame.get(size-3) == (byte)0xFF && frame.get(size-2) == (byte)0x00 && frame.get(size-1) == (byte)0xFF;
+	}
 	/**
 	 * Convert payload length to integer value.
 	 * 
 	 * @param b	Payload length Array (2 Bytes)
 	 * @return	Integer value of payload length.
 	 */
-	public final int bodyLength(){
+	public int bodyLength(){
 		if(frame.size() < PAYLOAD_L + 1)
 			return -1;
 		int i = 0;
@@ -58,6 +65,13 @@ public class FrameObject {
 		i <<= 8;
 		i |= frame.get(PAYLOAD_L) & 0xFF;
 		return i;
+	}
+	public int checksum() throws Exception{
+		byte checksum = getFrameData().get(0);
+		for(byte b : getFrameData()){
+			checksum ^= b;
+		}
+		return checksum & 0xFF;
 	}
 	public int getMessageID() throws Exception{
 		if(!checkLength())
@@ -74,6 +88,42 @@ public class FrameObject {
 
 	public int getCurrentFrameSize(){
 		return frame.size();
+	}
+
+	public String getDeviceID() throws Exception{
+		if(!checkLength())
+			throw new Exception("Out Of Bounds Exception - Index: " + 6 + " Frame size: " + frame.size());
+
+//		return frame.get(6);	
+		return "123";
+	}
+	public int getDatatype() throws Exception{
+		if(!checkLength())
+			throw new Exception("Out Of Bounds Exception - Index: " + 7 + " Frame size: " + frame.size());
+
+		return frame.get(7);			
+	}
+	public int getFrameCount() throws Exception{
+		if(!checkLength())
+			throw new Exception("Out Of Bounds Exception - Index: " + 8 + " Frame size: " + frame.size());
+
+		return frame.get(8);			
+	}
+	public int getFrameOffset() throws Exception{
+		if(!checkLength())
+			throw new Exception("Out Of Bounds Exception - Index: " + 9 + " Frame size: " + frame.size());
+
+		return frame.get(9);			
+	}
+	public List<Byte> getFrameData() throws Exception{ 
+		if(!checkLength())
+			throw new Exception("Out Of Bounds Exception - Index: " + (bodyLength()+5) + " Frame size: " + frame.size());
+
+		return frame.subList(10, bodyLength()+5);		
+	}
+
+	public ArrayList<Byte> getFrame() {
+		return frame;
 	}
 
 

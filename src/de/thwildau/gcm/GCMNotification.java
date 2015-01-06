@@ -52,7 +52,7 @@ public class GCMNotification extends HttpServlet {
 					.build();
 			//				Set regIdSet = readFromFile();
 			//				regIdList.addAll(regIdSet);
-			List<String> regIdList = AmberServer.getDatabase().getGCMRegIds();
+			List<String> regIdList = AmberServer.getDatabase().getGCMRegIds(3);
 
 			System.out.println("regId: " + regIdList);
 			System.out.println(message);			

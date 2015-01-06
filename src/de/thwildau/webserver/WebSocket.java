@@ -26,6 +26,7 @@ import de.thwildau.util.ServerLogger;
 public class WebSocket {
 
 	private ConcurrentHashMap<Session, DesktopStream> streams = new ConcurrentHashMap<Session, DesktopStream>();
+	private ConcurrentHashMap<Session, Integer> sessions = new ConcurrentHashMap<Session, Integer>();
 
 
 	@OnMessage
@@ -39,34 +40,53 @@ public class WebSocket {
 		switch(ident){
 		case "startStream":
 			String vehicleID = (String) request[1];
-			DesktopStream stream = new DesktopStream(session, vehicleID);
-			stream.startStream();
-			streams.put(session, stream);
+			StreamManager.getStream(vehicleID).startStream(session);
+			System.out.println(StreamManager.videoStreams.size());
+			System.out.println(StreamManager.videoStreams.containsKey(vehicleID));
+			//			DesktopStream stream = new DesktopStream(session, vehicleID);
+			//			stream.startStream();
+			//			streams.put(session, stream);
+			responseMessage = new WebsocketResponse(WebsocketResponse.STREAM_STARTED, Constants.SUCCESS_STREAM_STARTED).toJSON();
+			//			session.getBasicRemote().sendText(responseMessage);			
 			break;
 		case "stopStream":
 			vehicleID = (String) request[1];
-			streams.get(session).stopStream();
-			responseMessage = toJSON(new WebsocketResponse(WebsocketResponse.STREAM_CLOSED, "Stream closed"));
+			StreamManager.getStream(vehicleID).stopStream();
+			//streams.get(session).stopStream();
+			responseMessage = new WebsocketResponse(WebsocketResponse.STREAM_CLOSED, Constants.SUCCESS_STREAM_CLOSED).toJSON();
+			session.getBasicRemote().sendText(responseMessage);
 			break;
 		case "startRecord":
+			vehicleID = (String) request[1];
+			StreamManager.getStream(vehicleID).startRecord(vehicleID);
 			break;
 		case "stopRecord":
+			vehicleID = (String) request[1];
+			StreamManager.getStream(vehicleID).stopRecord(vehicleID);
 			break;
 		case "requestLogin":
 			String[] loginContent = parseLoginRequest((JSONObject) request[1]);
 			String usernameLogin = loginContent[0];
 			byte[] passLogin = passwordToHash(loginContent[1]);
 			// Check for User and Password
-			int userID = AmberServer.getDatabase().login(usernameLogin, passLogin);
+			int userID = AmberServer.getDatabase().adminLogin(usernameLogin, passLogin);
+			// No match with username and password
 			if(userID == -1){				
-				responseMessage = toJSON(new WebsocketResponse(WebsocketResponse.ERROR, "Login failed"));
-				ServerLogger.log("Login failed: " + usernameLogin, Constants.DEBUG);
+				responseMessage = new WebsocketResponse(WebsocketResponse.ERROR, Constants.ERROR_LOGIN).toJSON();
+				ServerLogger.log("Web App Login failed - Wrong Username or Password: " + usernameLogin, Constants.DEBUG);
 			}
+			// User is not allowed to visit the web app
+			else if (userID == -2){
+				responseMessage = new WebsocketResponse(WebsocketResponse.ERROR, Constants.ERROR_ADMIN).toJSON();
+				ServerLogger.log("Web App Login failed - No Admin: " + usernameLogin, Constants.DEBUG);
+			}
+			// Access granted
 			else{				
 				UserData response = new UserData();
 				response = response.prepareUserData(userID);
-				responseMessage = toJSON(new WebsocketResponse(WebsocketResponse.LOGIN, response));
-				ServerLogger.log("Login success: " + usernameLogin, Constants.DEBUG);
+				responseMessage = new WebsocketResponse(WebsocketResponse.LOGIN, response).toJSON();
+				sessions.put(session, userID);
+				ServerLogger.log("Web App Login success: " + usernameLogin, Constants.DEBUG);
 			}
 			session.getBasicRemote().sendText(responseMessage);
 			break;
@@ -74,7 +94,7 @@ public class WebSocket {
 			userID = safeLongToInt((long)request[1]);
 			AmberServer.getDatabase().logout(userID);
 			logoutUser(session);
-			responseMessage = toJSON(new WebsocketResponse(WebsocketResponse.LOGOUT, "Logout succeeded"));
+			responseMessage = new WebsocketResponse(WebsocketResponse.LOGOUT, "Logout succeeded").toJSON();
 			session.getBasicRemote().sendText(responseMessage);
 			break;
 		case "requestCars":
@@ -87,13 +107,17 @@ public class WebSocket {
 	}
 	@OnOpen
 	public void onOpen(Session session) {
-		System.out.println("Client connected " + session.getId());
+		ServerLogger.log("Web App Client connected: " + session.getId(), Constants.DEBUG);
 	}
 
 	@OnClose
 	public void onClose(Session session) {
-		streams.get(session).stopStream();
-		System.out.println("Connection closed " + session.getId());
+		for(Session s : streams.keySet())
+			if(s.equals(session)){
+				streams.get(session).stopStream();
+				streams.remove(session);
+			}
+		ServerLogger.log("Wep App Connection closed: " + session.getId(), Constants.DEBUG);
 	}
 
 	private Object[] parseRequest(String message){
@@ -130,7 +154,7 @@ public class WebSocket {
 		}
 		return request;
 	}
-	
+
 
 	private String[] parseCarsRequest(JSONObject jsonObject) {
 		String[] request = null;
@@ -141,23 +165,12 @@ public class WebSocket {
 		}
 		return request;
 	}	
-	public String toJSON(WebsocketResponse response){
-		ObjectMapper mapper = new ObjectMapper();
-
-		String json = null;
-		try {
-			json = mapper.writeValueAsString(response);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.out.println(json);
-		return json;			
-	}
 	private void logoutUser(Session session) {
-		streams.get(session).stopStream();
-		
+		if(streams.get(session) != null)
+			streams.get(session).stopStream();
+
 	}
-	
+
 	private byte[] passwordToHash(String pass){
 		byte[] hashed = null;
 		try {
@@ -175,10 +188,10 @@ public class WebSocket {
 		return hashed;
 	}
 	public static int safeLongToInt(long l) {
-	    if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
-	        throw new IllegalArgumentException
-	            (l + " cannot be cast to int without changing its value.");
-	    }
-	    return (int) l;
+		if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException
+			(l + " cannot be cast to int without changing its value.");
+		}
+		return (int) l;
 	}
 }

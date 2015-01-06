@@ -49,7 +49,9 @@
 .car {
 	position: relative;
 	display: inline-block;
-	height: 98%;
-	width: 150px;
-	border: 1px solid #ffcc33; 
+	height: 97%;
+	width: 140px;
+	border: 1px solid #ffcc33;
+	padding-top: 1%;
+	padding-left: 10px; 
 }

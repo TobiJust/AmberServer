@@ -30,7 +30,9 @@ public class ImageData {
 	}
 
 	public byte[] getData() {
-		return image.toByteArray();
+		if(image.size() > 0)
+			return image.toByteArray();
+		return null;
 	}
 	public BufferedImage getBufferedImage(){
 		// convert byte array back to BufferedImage
@@ -43,8 +45,7 @@ public class ImageData {
 		}
 		return null;
 	}
-
-	public void writeImageToFile(){
+	public void writeImageToFile(int index){
 		try {
 			System.out.println("Write To File 2");
 			// convert byte array back to BufferedImage
@@ -52,7 +53,7 @@ public class ImageData {
 			BufferedImage bImageFromConvert = ImageIO.read(in);
 
 			ImageIO.write(bImageFromConvert, "jpg", new File(
-					"responseImage1.jpg"));
+					"responseImage"+(index) +".jpg"));
 
 		} catch (IOException e) {
 			System.out.println(e.getMessage());

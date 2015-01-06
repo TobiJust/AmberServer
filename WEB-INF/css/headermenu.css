@@ -7,9 +7,12 @@
 	overflow: hidden;
 }
 
+button#btncommands,
 button#btncarpicker,
 button#btnnotifier,
 button#btnswitchview,
+button#btnscreenshot,
+button#btnlogout,
 button#btnrecord {
 	height: 100%;
 	width: 10%;
@@ -38,15 +41,36 @@ button#btnswitchview {
 	background-size: 30px 20px;
 }
 
+button#btnscreenshot {
+	background-image: url('../pics/screenshot.png');
+	background-position: 50% 50%;
+	background-size: 25px 25px;
+}
+
+button#btnlogout {
+	background-image: url('../pics/logout.png');
+	background-position: 50% 50%;
+	background-size: 25px 25px;
+}
+
+button#btncommands {
+	background-image: url('../pics/command.png');
+	background-position: 50% 50%;
+	background-size: 25px 25px;
+}
+
 button#btnrecord {
 	vertical-align: top;
 	color: #ffcc33;
-	font-size: 30px;
+	font-size: 20px;
 }
 
+button#btncommands:active,
 button#btncarpicker:active,
 button#btnnotifier:active,
 button#btnswitchview:active,
+button#btnscreenshot:active,
+button#btnlogout:active,
 button#btnrecord:active {
 	background-color: #ffcc33;
 }

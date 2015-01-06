@@ -9,7 +9,7 @@ public class OBUMessage {
 	public final static byte[] FRAME_END	 = {(byte)0xFF, (byte)0x00, (byte)0xFF};
 
 	public final static byte REQUEST_PICTURE	= (byte) 0x01;
-	public final static byte REQUEST_TELEMETRY	= (byte) 0x02;
+	public final static byte REQUEST_TELEMETRY	= (byte) 0x03;
 	public final static byte CONTROL_COMMAND	= (byte) 0x03;
 	public final static byte REQUEST_DATA		= (byte) 0x05;
 
