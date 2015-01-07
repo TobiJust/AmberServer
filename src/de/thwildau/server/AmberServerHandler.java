@@ -49,32 +49,29 @@ public class AmberServerHandler extends IoHandlerAdapter
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
 
 
-		//		try {
-		//			Thread.sleep(2000);
-		//		} catch (InterruptedException e) {
-		//			e.printStackTrace();
-		//		}
-		////		byte[] b = {(byte)0x01};
-		//		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-		//		handlers.put(session, new OBUResponseHandler());
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		byte[] b = {(byte)0x01};
+		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+		obuHandlers.put(session, new OBUResponseHandler());
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
 		ServerLogger.log("Session closed...", Constants.DEBUG);
-		if(session.getAttribute("user") != null){
-			setTimeout((int) session.getAttribute("user"));
-		}
 	}
 
 	@Override
-	public void exceptionCaught( IoSession session, Throwable cause ) throws Exception
-	{
+	public void exceptionCaught( IoSession session, Throwable cause ) throws Exception{
 		cause.printStackTrace();
 	}
 
 	public void messageWrite(Object message){
 
 	}
+
 	/**
 	 * Handle received messages from a Android Application.
 	 * 
@@ -103,7 +100,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 			return;
 		}
 
-		System.out.println(receivedClientMessage.getId());
 		switch(receivedClientMessage.getId()){
 		case LOGIN_CHECK:
 			try{
@@ -143,21 +139,19 @@ public class AmberServerHandler extends IoHandlerAdapter
 			}
 			// Check for GCM Registration
 			else{
-				//				// GCM Registration failed
-				//				if(!queryRegisterGCM){
-				//					responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_GCM);					
-				//					ServerLogger.log("GCM failed: " + usernameLogin, DEBUG);
-				//				}	
-				//				// Everything ok - Login succeeded
-				//				else{
 				AmberServer.getDatabase().registerGCM(userID, regID);
 				UserData response = new UserData();
 				response = response.prepareUserData(userID);
 				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);
 				session.setAttribute("user", userID);
 				ServerLogger.log("Login success: " + usernameLogin, Constants.DEBUG);
-				//			}
 			}
+			session.write(responseMessage);
+			break;
+		case LOGOUT:
+			int user_id = (int)receivedClientMessage.getContent();
+			AmberServer.getDatabase().logout(user_id);
+			responseMessage = new ClientMessage(ClientMessage.Ident.LOGOUT, Constants.SUCCESS_LOGOUT);
 			session.write(responseMessage);
 			break;
 		case REGISTER:
@@ -181,8 +175,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 			Object[] request = (Object[]) receivedClientMessage.getContent();
 			int eventID = (int) request[0];
 			String obuID = (String) request[1];
-			System.out.println("EVENT ID " + eventID);
-			System.out.println("OBU ID " + obuID);
 			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
 			String vehicleName = AmberServer.getDatabase().getVehicle(obuID);
 			String eventType = (String)eventData[1];
@@ -193,9 +185,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage, vehicleName);
 			event.setVehicleID(obuID);
 			session.write(new ClientMessage(receivedClientMessage.getId(), event));
-			break;
-		case NOTIFICATION:
-			//			new SendNotification("GCM_Notification from OBU");
 			break;
 		case REGISTER_VEHICLE:
 			request = (Object[]) receivedClientMessage.getContent();
@@ -220,7 +209,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 			userID = (int) request[0];
 			vehicleID = (String) request[1];
 			int position = (int) request[2];
-			System.out.println("POSITION UNREGISTER " + position);
 			boolean queryUnregisterVehicle = AmberServer.getDatabase().unregisterVehicle(userID, vehicleID);
 			if(!queryUnregisterVehicle){
 				responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, -1);
@@ -250,7 +238,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 			vehicleID = (String) receivedClientMessage.getContent();
 			ArrayList<Event> events = Vehicle.prepareEventList(vehicleID);
 			responseMessage = new ClientMessage(receivedClientMessage.getId(), events);
-			System.out.println("ID " + vehicleID + " EVENTSIZE " + events.size());
 			session.write(responseMessage);
 			break;
 		case GET_VEHICLELIST_BACKPRESS:
@@ -275,7 +262,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 	private synchronized void closeSession(IoSession session){
 		try{
 			//			lock.lock();
-			obuHandlers.get(session).writeToFile();
+			//			obuHandlers.get(session).writeToFile();
 			sessions.remove(session);
 			session.close(true);
 		}
@@ -293,17 +280,17 @@ public class AmberServerHandler extends IoHandlerAdapter
 		FrameObject frame = new FrameObject();
 		frame.append(data, 0);
 		try {
-			if(frame.getMessageID() == FrameObject.DEVICE){
-				OBUResponseHandler.handlers.put(frame.getDeviceID(), session);
-				obuHandlers.put(session, new OBUResponseHandler());
+			//			if(frame.getMessageID() == FrameObject.DEVICE){
+			//				OBUResponseHandler.handlers.put(frame.getDeviceID(), session);
+			//				obuHandlers.put(session, new OBUResponseHandler());
+			//			}
+			//			else{
+			boolean transactionState = obuHandlers.get(session).addData(data);
+			if(transactionState){
+				byte[] b = {(byte)0x01};
+				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
 			}
-			else{
-				boolean transactionState = obuHandlers.get(session).addData(data);
-				if(transactionState){
-					byte[] b = {(byte)0x01};
-					session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-				}
-			}
+			//			}
 
 		} catch (Exception e) {
 			e.printStackTrace();

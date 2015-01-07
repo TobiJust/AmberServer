@@ -1,15 +1,12 @@
 package de.thwildau.start;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import com.github.sarxos.webcam.Webcam;
-
-import de.thwildau.database.DatabaseAccess;
 import de.thwildau.gcm.SendNotification;
 import de.thwildau.info.OBUMessage;
 import de.thwildau.obu.OBUResponseHandler;
@@ -32,7 +29,7 @@ public class StartAmberServer {
 
 	public static void main(String[] args){
 		arguments = args;		
-
+	
 		initLogger();
 		AmberServer.init();
 		AmberWebServer.init();
@@ -86,7 +83,7 @@ public class StartAmberServer {
 					Runnable run = new Runnable() {
 						public void run() {
 							try {
-								for (int i = 0; i < 20; i++) {
+								for (int i = 0; i < 50; i++) {
 									Thread.sleep(1000);
 								}
 								running = false;
@@ -96,14 +93,14 @@ public class StartAmberServer {
 						}
 					};
 					new Thread(run).start();
-					StreamManager.getStream("BMW_I8").startStream();
+//					StreamManager.getStream("BMW_I8").startStream();
 //					StreamManager.getStream("BMW_I8").startRecord("BMW_I8");
 					try {
 						while(running){
 							boolean transactionState = orh.addData(Constants.sendData());
 						}
 //						StreamManager.getStream("BMW_I8").stopRecord("BMW_I8");
-						StreamManager.getStream("BMW_I8").stopStream();
+//						StreamManager.getStream("BMW_I8").stopStream();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

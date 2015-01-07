@@ -7,8 +7,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -19,25 +21,26 @@ import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
 
-public class VideoStream {
+import de.thwildau.util.Constants;
 
-	private static final double FRAME_RATE = 135;
-	private static final int SECONDS_TO_RUN_FOR = 10;
+public class VideoStream {
 
 	private HashMap<Integer, IMediaWriter> streams = new HashMap<Integer, IMediaWriter>();
 
-	private static String outputFilename = "mydesktop_"+(int)FRAME_RATE+"fps"+SECONDS_TO_RUN_FOR+"s.mp4";
+	private static String outputFilename = "debug.mp4";
 
 	private static Dimension screenBounds;
 	private IMediaWriter writer;
 	private long startTime;
 
-	public VideoStream(String vehicleID) {
+	public VideoStream(int userID, String vehicleID) {
 
 		// build path and filename
-		Date date = new Date();
-		if((new File("datastore//"+vehicleID)).mkdirs())			
-			outputFilename = "Date.mp4";
+		Path path = Paths.get(Constants.DATA_FOLDER+"//"+userID+"//"+vehicleID);
+		if (Files.notExists(path)) {
+			if((new File(path.toString())).mkdirs())	
+				outputFilename = new SimpleDateFormat("yyyy-MM-dd hh-mm-ss'.mp4'").format(new Date());			
+		}
 		
 		// let's make a IMediaWriter to write the file.
 		writer = ToolFactory.makeWriter(outputFilename);

@@ -81,10 +81,10 @@ public class VideoStreamer extends Thread {
 
 	public void startStream(Session session){
 		this.session = session;
-		if(!this.running){
-			this.running = true;
-			start();
-		}
+//		if(!this.running){
+//			this.running = true;
+//			start();
+//		}
 		if(!this.watch)
 			this.watch = true;
 		ServerLogger.log("Stream started" , Constants.DEBUG);
@@ -96,12 +96,20 @@ public class VideoStreamer extends Thread {
 		ServerLogger.log("Stream stopped" , Constants.DEBUG);
 	}
 
-	public void startRecord(String vehicleID) {
-		this.videoStream = new VideoStream(vehicleID);
+	/**
+	 * Start recording the current stream.
+	 * @param vehicleID
+	 */
+	public void startRecord(int userID, String vehicleID) {
+		this.videoStream = new VideoStream(userID, vehicleID);
 		streams.put(vehicleID, this.videoStream);
 		if(!this.recording)
 			this.recording = true;
 	}
+	/**
+	 * 
+	 * @param vehicleID
+	 */
 	public void stopRecord(String vehicleID){
 		streams.get(vehicleID).getVideoStream();
 		if(this.recording)
@@ -118,7 +126,7 @@ public class VideoStreamer extends Thread {
 			
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 

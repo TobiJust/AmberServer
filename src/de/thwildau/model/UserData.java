@@ -2,8 +2,6 @@ package de.thwildau.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
 
 import de.thwildau.server.AmberServer;
 

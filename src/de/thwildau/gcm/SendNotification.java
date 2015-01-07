@@ -26,21 +26,26 @@ public class SendNotification {
 
 	public SendNotification(String type, String msg, String obuID){
 
+		/**
+		 *  Get valid GCM Registration IDs from the database.
+		 *  Only if Users are logged in and are subscribers of a certain Vehicle,
+		 *  the Registration ID will be added to the list of devices who will receive notifications.
+		 */
 		ArrayList<Integer> userList = AmberServer.getDatabase().getNotificationUsers(obuID);
 		List<String> regIdList = new ArrayList<String>();
 		for(int id : userList){
 			regIdList.addAll(AmberServer.getDatabase().getGCMRegIds(id));
-			System.out.println("USER " + id);
 		}
 
 		try	{
+			//-------------------------------------
 			BufferedImage img = ImageIO.read(new File("responseImage.jpg"));
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write( img, "jpg", baos );
 			baos.flush();
 			byte[] imageInByte = baos.toByteArray();
 			baos.close();
-			
+			//-------------------------------------
 			int eventID = AmberServer.getDatabase().addEvent(obuID, type, "12122014-112534", "52.13", "13.15", imageInByte);
 			
 			MulticastResult result = null;
@@ -50,7 +55,7 @@ public class SendNotification {
 					.delayWhileIdle(true).addData(MESSAGE_KEY, msg).addData("type", type)
 					.addData("eventID", ""+eventID).addData("obuID", obuID)
 					.build();	
-			result = sender.send(message, regIdList, 1);	
+			result = sender.send(message, regIdList, 1);
 		}
 		catch (Exception e)
 		{

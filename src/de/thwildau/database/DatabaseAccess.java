@@ -145,16 +145,18 @@ public class DatabaseAccess {
 	 * Logout a User, remove from Session Table.
 	 * @param user_id	Current User
 	 */
-	public void logout(int user_id) {
+	public boolean logout(int user_id) {
+		int rows = 0;
 		String query = "DELETE FROM session WHERE user_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, user_id);
-			preparedStatement.executeUpdate();
+			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		return (rows > 0) ? true : false;
 	}
 	/**
 	 * Check, if the current User is still online.
@@ -418,7 +420,6 @@ public class DatabaseAccess {
 				ResultSet rs = connect.prepareStatement(query3).executeQuery();
 				while (rs.next())
 					eventID = rs.getInt(1);
-				System.out.println("EVENT ID " + eventID);
 				if(eventID >= 0){
 					preparedStatement = connect.prepareStatement(query2);
 					preparedStatement.setString(1, vehicleID);
@@ -497,12 +498,19 @@ public class DatabaseAccess {
 	public ArrayList<Integer> getNotificationUsers(String obuID) {
 		ArrayList<Integer> user = new ArrayList<Integer>();
 		String query = "SELECT user_id FROM VehiclePerUser WHERE vehicle_id=? AND alarm_status=1";
+		String query2 = "SELECT COUNT(*) FROM session WHERE user_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setString(1, obuID);
 			ResultSet rs = preparedStatement.executeQuery();
-			while (rs.next())
-				user.add(rs.getInt(1));
+			while (rs.next()){
+				int userID = rs.getInt(1);
+				preparedStatement = connect.prepareStatement(query2);
+				preparedStatement.setInt(1, userID);
+				ResultSet rs2 = preparedStatement.executeQuery();
+				if(rs2.getInt(1) != 0)
+					user.add(userID);
+			}
 			//			close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -548,12 +556,12 @@ public class DatabaseAccess {
 					eventData[i] = rs.getObject(i+1);
 				try {
 					BufferedImage image = ImageIO.read(rs.getBinaryStream(eventData.length));
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						ImageIO.write(image, "jpg", baos);
-						baos.flush();
-						byte[] imageInByte = baos.toByteArray();
-						baos.close();
-						eventData[i] = imageInByte;
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					ImageIO.write(image, "jpg", baos);
+					baos.flush();
+					byte[] imageInByte = baos.toByteArray();
+					baos.close();
+					eventData[i] = imageInByte;
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -602,5 +610,5 @@ public class DatabaseAccess {
 		}
 	}
 
-	
+
 }

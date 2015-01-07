@@ -29,12 +29,18 @@ public class FrameObject {
 	}
 
 	public boolean checkLength(){
-		if(!checkFrameBegin() || !checkFrameEnd() || frame.size() < 5)
+		if(!checkFrameBegin() || frame.size() < 5){
+			System.out.println("CHECKS ARENT CORRECT");
 			return false;
+		}
 
+//		if(!checkFrameEnd(bodyLength()+6))
+//			return false;
+		
 		int length = bodyLength();
 		if(frame.size() == length+9 )
 			return true;
+		System.out.println("FRAME SIZE UNGLEICH LENGTH+9");
 		return false;
 	}
 
@@ -44,12 +50,12 @@ public class FrameObject {
 
 		return frame.get(0) == (byte)0xFF && frame.get(1) == (byte)0x00 && frame.get(2) == (byte)0xFF;
 	}
-	public boolean checkFrameEnd(){
+	public boolean checkFrameEnd(int i){
 		int size = frame.size();
 		if(size < 3)
 			return false;
 
-		return frame.get(size-3) == (byte)0xFF && frame.get(size-2) == (byte)0x00 && frame.get(size-1) == (byte)0xFF;
+		return frame.get(i) == (byte)0xFF && frame.get(i+1) == (byte)0x00 && frame.get(i+2) == (byte)0xFF;
 	}
 	/**
 	 * Convert payload length to integer value.
@@ -94,7 +100,7 @@ public class FrameObject {
 		if(!checkLength())
 			throw new Exception("Out Of Bounds Exception - Index: " + 6 + " Frame size: " + frame.size());
 
-//		return frame.get(6);	
+		//		return frame.get(6);	
 		return "123";
 	}
 	public int getDatatype() throws Exception{

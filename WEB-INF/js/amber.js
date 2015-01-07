@@ -111,7 +111,7 @@ amber.net.carsError;			//.done
 amber.net.AmberSocket = {};
 //amber.net.Param - params for socket.send commands
 amber.net.Param = {};
-amber.net.Param.SOCKETADRESS = "ws://10.220.6.118:3001/websocket/";
+amber.net.Param.SOCKETADRESS = "ws://localhost:3001/websocket/";
 // send commands over socket:
 amber.net.Param.STARTSTREAM = "startStream";
 amber.net.Param.STOPSTREAM = "stopStream";

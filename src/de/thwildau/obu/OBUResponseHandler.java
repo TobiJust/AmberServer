@@ -50,7 +50,8 @@ public class OBUResponseHandler {
 	 * 		   false, if Frame needs more Data
 	 * @throws Exception 
 	 */
-	public boolean addData(byte[] data) throws Exception{		
+	public boolean addData(byte[] data) throws Exception{	
+		System.out.println("Data Length " + data.length);
 		if(frameList.size() < 1 || frameList.get(frameList.size()-1).checkLength()) 
 			frameList.add(new FrameObject());
 
@@ -64,7 +65,15 @@ public class OBUResponseHandler {
 				frameList.add(obj);
 			}			
 		}
+		System.out.println("Check Length " + lastFrame.checkLength());
+		System.out.println("Last Frame " + lastFrame.bodyLength()+9);
+		if(lastFrame.getCurrentFrameSize() > 3)
+			System.out.println(lastFrame.getFrame().get(lastFrame.getCurrentFrameSize()-3) + " " 
+					+lastFrame.getFrame().get(lastFrame.getCurrentFrameSize()-2) + " " + 
+					lastFrame.getFrame().get(lastFrame.getCurrentFrameSize()-1));
 		if(lastFrame.checkLength()){
+			System.out.println("Size " + frameList.size());
+			System.out.println("Message ID " + lastFrame.getMessageID());
 			//			for(FrameObject fo : frameList){
 			switch(lastFrame.getMessageID()){
 			case 2:
@@ -75,10 +84,14 @@ public class OBUResponseHandler {
 			case 4:
 				addImageToStream(lastFrame);
 				break;
+			default:
+				break;
 			}
+			System.out.println("Return True");
 			return true;
 			//			}
 		}
+		System.out.println("Return False");
 		return false;
 	}
 	public boolean addImageToStream(FrameObject frame){
