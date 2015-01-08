@@ -1,95 +1,51 @@
 package de.thwildau.stream;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
+import de.thwildau.webserver.WebsocketResponse;
 
-
-
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class VideoStreamer extends Thread {
 
-	private static final Logger LOG = LoggerFactory.getLogger(VideoStreamer.class);
-	private ConcurrentHashMap<String, VideoStream> streams = new ConcurrentHashMap<String, VideoStream>();
-	int i = 0;
+	private ConcurrentHashMap<Integer, VideoStream> streams = new ConcurrentHashMap<Integer, VideoStream>();
 	private byte[] image;
 	private boolean running = false;
 	private boolean watch = true;
-	private boolean recording = true;
+	private boolean recording = false;
 	private Session session;
 	private VideoStream videoStream;
+	private WebsocketResponse response;
 
-
-	@Override
-	public void run() {		
-		while(running){
-			//			try {
-			//				System.out.println(this.image + " " + this.session);
-			//				if(this.image != null && this.session != null){
-			////					if(watch){
-			////						ByteBuffer buf = ByteBuffer.wrap(this.image);
-			////						this.session.getBasicRemote().sendBinary(buf);
-			////						Thread.sleep(50);
-			////					}
-			//					if(recording){
-			//						this.videoStream.writeToStream(this.image);
-			//					}
-			//				}
-			//			} catch (IOException e) {
-			//				e.printStackTrace();
-			//			} catch (InterruptedException e) {
-			//				e.printStackTrace();
-			//			}
-		}		
-	}
-
+	/**
+	 * 
+	 * @return The current image as byte array.
+	 */
 	public byte[] getValue(){
 		return this.image;
 	}
-	public void setImage(byte[] data){		
-		//		this.image = data;
-		try {
-			System.out.println(data + " " + (this.session != null) + " " + watch + " " + recording);
-			if(data != null && this.session == null){
-				if(watch){
-					ByteBuffer buf = ByteBuffer.wrap(data);
-					this.session.getBasicRemote().sendBinary(buf);
-				}
-				if(recording){
-					this.videoStream.writeToStream(data);
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
-	public void startStream() {
-		if(!this.running){
-			this.running = true;
-			start();
-		}
-		ServerLogger.log("Stream started" , Constants.DEBUG);
-	}
-
+	/**
+	 * 
+	 * @param session
+	 */
 	public void startStream(Session session){
+		System.out.println(StreamManager.videoStreams.keySet());
 		this.session = session;
-//		if(!this.running){
-//			this.running = true;
-//			start();
-//		}
 		if(!this.watch)
 			this.watch = true;
 		ServerLogger.log("Stream started" , Constants.DEBUG);
 	}
-
+	/**
+	 * 
+	 */
 	public void stopStream() {
 		if(this.running)
 			this.running = false;
@@ -97,37 +53,44 @@ public class VideoStreamer extends Thread {
 	}
 
 	/**
-	 * Start recording the current stream.
-	 * @param vehicleID
+	 * Start recording the stream with given vehicle id.
+	 * @param vehicleID		ID of the vehicle to stop the video.
 	 */
-	public void startRecord(int userID, String vehicleID) {
-		this.videoStream = new VideoStream(userID, vehicleID);
+	public void startRecord(int userID, int vehicleID) {
+		this.videoStream = new VideoStream(this, userID, vehicleID);
+		this.videoStream.startRecord();
 		streams.put(vehicleID, this.videoStream);
 		if(!this.recording)
 			this.recording = true;
 	}
 	/**
-	 * 
-	 * @param vehicleID
+	 * Stop recording the stream with given vehicle id.
+	 * @param vehicleID		ID of the vehicle to stop the video.
 	 */
-	public void stopRecord(String vehicleID){
-		streams.get(vehicleID).getVideoStream();
+	public void stopRecord(int vehicleID){
 		if(this.recording)
 			this.recording = false;
+		if(streams.get(vehicleID) != null)
+			streams.get(vehicleID).getVideoStream();
+		ServerLogger.log("Stop Recording for Vehicle " + vehicleID, Constants.DEBUG);
 	}
 
-	public void setImage(String response) {
+	public void setImage(WebsocketResponse response) {
 		try {
-			System.out.println(response);
 			if(response != null && this.session != null){
+				System.out.println(watch + " " +response);
+				this.response = response;
 				if(watch){
-					this.session.getBasicRemote().sendText(response);
-				}
-			
+					this.session.getBasicRemote().sendText(response.toJSON());
+				}	
 			}
-		} catch (IOException e) {
-//			e.printStackTrace();
+			Thread.sleep(500);
+		} catch (Exception e) {
 		}
+	}
+
+	public WebsocketResponse getResponse() {
+		return this.response;
 	}
 
 

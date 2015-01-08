@@ -5,9 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class Constants {
 
-	public static final boolean DEBUG = true;
+	public static boolean DEBUG = true;
 
 	public static final String PROPERTIES_FILENAME = "server.properties";
 	public static final String PROPERTIES_PATH = "";
@@ -19,19 +24,21 @@ public class Constants {
 	public static final String PROJECT_NR = "project_nr";
 
 	public static final String SUCCESS_REGISTER = "Registration succeeded";
-	public static final String SUCCESS_REGISTER_VEHICLE = "Add Vehicle succeeded";
+	public static final String SUCCESS_REGISTER_VEHICLE = "Register Vehicle succeeded";
 	public static final String SUCCESS_STREAM_STARTED = "Stream successful started";
 	public static final String SUCCESS_STREAM_CLOSED = "Stream successful closed";
-	public static final Object SUCCESS_LOGOUT = "Logout succeeded";
+	public static final String SUCCESS_LOGOUT = "Logout succeeded";
+	public static final String SUCCESS_ADD_VEHICLE = "Add Vehicle suceeded";
 
-	public static final String ERROR_LOGIN = "Wrong Username or Password!";
-	public static final String ERROR_ADMIN = "Wrong Username or Password!";
+	public static final String ERROR_LOGIN = "Login failed";
+	public static final String ERROR_ADMIN = "Login failed";
 	public static final String ERROR_GCM = "Error while registering GCM";
 	public static final String ERROR_REGISTER = "Registration failed";	
 	public static final String ERROR_RECORD = "Error while recording";
 	public static final String ERROR_REGISTER_VEHICLE = "Can't add new Vehicle";
 	public static final String ERROR_UNREGISTER_VEHICLE = "Can't unregister Vehicle";
-	public static final Object ERROR_LOGOUT = "Logout failed";
+	public static final String ERROR_ADD_VEHICLE = "Failed to add vehicle";
+	public static final String ERROR_LOGOUT = "Logout failed";
 	public static final String ERROR_UNKNOWN = "Unknown argument given";
 
 
@@ -45,8 +52,6 @@ public class Constants {
 	public static final String DATA_FOLDER= "datastore/";
 	
 	
-
-
 	public static byte[] sendData(){
 		byte[] data = null;
 		try {

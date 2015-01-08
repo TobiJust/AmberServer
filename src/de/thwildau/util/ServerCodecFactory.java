@@ -4,22 +4,28 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
-import org.apache.mina.filter.codec.textline.TextLineEncoder;
 
+/**
+ * 
+ * @author Tobias Just
+ *
+ * This class contains factory methods to create new objects for encoding and decoding
+ * communication data.
+ */
 public class ServerCodecFactory implements ProtocolCodecFactory {
 	/**
-	    * A protocol without encoder and decoder is a waste. 
-	    * Encode mentioned here
-	    */
-	    public ProtocolEncoder getEncoder(IoSession ioSession) throws Exception {
-	        return new ServerResponseEncoder();
-	    }
-	    
-	    /**
-	     * A protocol without encoder and decoder is a waste. 
-	     * Encode mentioned here
-	     */
-	    public ProtocolDecoder getDecoder(IoSession ioSession) throws Exception {
-	        return new ServerRequestDecoder();
-	    }
+	 * A protocol encoder to encode outgoing data. 
+	 * It returns a new ServerResponseDecoder.
+	 */
+	public ProtocolEncoder getEncoder(IoSession ioSession) throws Exception {
+		return new ServerResponseEncoder();
+	}
+
+	/**
+	 * A protocol decoder to decode incoming data. 
+	 * It returns a new ServerRequestDecoder.
+	 */
+	public ProtocolDecoder getDecoder(IoSession ioSession) throws Exception {
+		return new ServerRequestDecoder();
+	}
 }

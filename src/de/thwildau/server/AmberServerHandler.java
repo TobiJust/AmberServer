@@ -17,13 +17,12 @@ import de.thwildau.model.User;
 import de.thwildau.model.UserData;
 import de.thwildau.model.Vehicle;
 import de.thwildau.obu.OBUResponseHandler;
-import de.thwildau.obu.model.FrameObject;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
 /**
  * 
- * @author Tobi Just
+ * @author Tobias Just
  *
  */
 public class AmberServerHandler extends IoHandlerAdapter
@@ -49,14 +48,14 @@ public class AmberServerHandler extends IoHandlerAdapter
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
 
 
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		byte[] b = {(byte)0x01};
-		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-		obuHandlers.put(session, new OBUResponseHandler());
+//		try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//		byte[] b = {(byte)0x01};
+//		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+//		obuHandlers.put(session, new OBUResponseHandler());
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
@@ -89,12 +88,12 @@ public class AmberServerHandler extends IoHandlerAdapter
 			receivedClientMessage = (ClientMessage) message;
 		else{ 										// OBU
 			interpretData((byte[]) message, session);
-			//			boolean transactionState = handlers.get(session).addData((byte[])message); 
+			//			boolean transactionState = obuHandlers.get(session).addData((byte[])message); 
 			//			if(transactionState){
 			//				byte[] b = {(byte)0x01};
 			//				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
 			//			}
-
+			//
 			//			Thread.sleep(200);
 
 			return;
@@ -157,7 +156,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 		case REGISTER:
 			String usernameRegister = ((User)receivedClientMessage.getContent()).getName();
 			byte[] passRegister = ((User)receivedClientMessage.getContent()).getPass();
-			boolean queryRegister = AmberServer.getDatabase().addUser(usernameRegister, passRegister);
+			boolean queryRegister = AmberServer.getDatabase().addUser(usernameRegister, passRegister, 0);
 			// Registration failed
 			if(!queryRegister){
 				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER);
@@ -174,7 +173,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 		case EVENT_REQUEST:
 			Object[] request = (Object[]) receivedClientMessage.getContent();
 			int eventID = (int) request[0];
-			String obuID = (String) request[1];
+			int obuID = (int) request[1];
 			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
 			String vehicleName = AmberServer.getDatabase().getVehicle(obuID);
 			String eventType = (String)eventData[1];
@@ -189,7 +188,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 		case REGISTER_VEHICLE:
 			request = (Object[]) receivedClientMessage.getContent();
 			userID = (int) request[0];
-			String vehicleID = (String) request[1];
+			int vehicleID = (int) request[1];
 
 			Vehicle vehicle = AmberServer.getDatabase().registerVehicle(userID, vehicleID);
 			if(vehicle == null){
@@ -207,7 +206,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 		case UNREGISTER_VEHICLE:
 			request = (Object[]) receivedClientMessage.getContent();
 			userID = (int) request[0];
-			vehicleID = (String) request[1];
+			vehicleID = (int) request[1];
 			int position = (int) request[2];
 			boolean queryUnregisterVehicle = AmberServer.getDatabase().unregisterVehicle(userID, vehicleID);
 			if(!queryUnregisterVehicle){
@@ -224,7 +223,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 		case TOGGLE_ALARM:
 			request = (Object[]) receivedClientMessage.getContent();
 			userID = (int) request[0];
-			vehicleID = (String) request[1];
+			vehicleID = (int) request[1];
 			boolean status = (boolean) request[2];
 			position = (int) request[3];
 			boolean queryToggleAlarm = AmberServer.getDatabase().toggleAlarm(userID, vehicleID, status);
@@ -235,7 +234,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 			break;
 		case GET_EVENTLIST_BACKPRESS:
 		case GET_EVENTLIST:
-			vehicleID = (String) receivedClientMessage.getContent();
+			vehicleID = (int) receivedClientMessage.getContent();
 			ArrayList<Event> events = Vehicle.prepareEventList(vehicleID);
 			responseMessage = new ClientMessage(receivedClientMessage.getId(), events);
 			session.write(responseMessage);
@@ -275,16 +274,17 @@ public class AmberServerHandler extends IoHandlerAdapter
 		handler = null;
 	}
 
-
 	private void interpretData(byte[] data, IoSession session) {
-		FrameObject frame = new FrameObject();
-		frame.append(data, 0);
+		//		FrameObject frame = new FrameObject();
+		//		frame.append(data, 0);
 		try {
 			//			if(frame.getMessageID() == FrameObject.DEVICE){
 			//				OBUResponseHandler.handlers.put(frame.getDeviceID(), session);
 			//				obuHandlers.put(session, new OBUResponseHandler());
 			//			}
 			//			else{
+			if(obuHandlers.get(session) == null)
+				obuHandlers.put(session, new OBUResponseHandler());
 			boolean transactionState = obuHandlers.get(session).addData(data);
 			if(transactionState){
 				byte[] b = {(byte)0x01};

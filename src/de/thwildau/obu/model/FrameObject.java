@@ -30,24 +30,18 @@ public class FrameObject {
 
 	public boolean checkLength(){
 		if(!checkFrameBegin() || frame.size() < 5){
-			System.out.println("CHECKS ARENT CORRECT");
+			System.out.println("checkFrameBegin() " + checkFrameBegin() + " FRAME SIZE " + frame.size());
 			return false;
 		}
-
-//		if(!checkFrameEnd(bodyLength()+6))
-//			return false;
-		
 		int length = bodyLength();
 		if(frame.size() == length+9 )
 			return true;
-		System.out.println("FRAME SIZE UNGLEICH LENGTH+9");
 		return false;
 	}
 
 	public boolean checkFrameBegin(){
 		if(frame.size() < 3)
 			return false;
-
 		return frame.get(0) == (byte)0xFF && frame.get(1) == (byte)0x00 && frame.get(2) == (byte)0xFF;
 	}
 	public boolean checkFrameEnd(int i){
@@ -73,11 +67,11 @@ public class FrameObject {
 		return i;
 	}
 	public int checksum() throws Exception{
-		byte checksum = getFrameData().get(0);
-		for(byte b : getFrameData()){
+		byte checksum = 0;
+		for(byte b : getChecksumData()){
 			checksum ^= b;
 		}
-		return checksum & 0xFF;
+		return checksum;
 	}
 	public int getMessageID() throws Exception{
 		if(!checkLength())
@@ -96,12 +90,12 @@ public class FrameObject {
 		return frame.size();
 	}
 
-	public String getDeviceID() throws Exception{
+	public int getDeviceID() throws Exception{
 		if(!checkLength())
 			throw new Exception("Out Of Bounds Exception - Index: " + 6 + " Frame size: " + frame.size());
 
-		//		return frame.get(6);	
-		return "123";
+		return frame.get(6) & 0xFF;	
+		//		return "123";
 	}
 	public int getDatatype() throws Exception{
 		if(!checkLength())
@@ -120,6 +114,12 @@ public class FrameObject {
 			throw new Exception("Out Of Bounds Exception - Index: " + 9 + " Frame size: " + frame.size());
 
 		return frame.get(9);			
+	}
+	public List<Byte> getChecksumData() throws Exception{
+		if(!checkLength())
+			throw new Exception("Out Of Bounds Exception - Index: " + (bodyLength()+5) + " Frame size: " + frame.size());
+
+		return frame.subList(5, bodyLength()+5);	
 	}
 	public List<Byte> getFrameData() throws Exception{ 
 		if(!checkLength())

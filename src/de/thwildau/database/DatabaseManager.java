@@ -20,9 +20,7 @@ import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
 
-public class DatabaseAccess {
-
-	;
+public class DatabaseManager {
 	// JDBC
 	private Connection connect = null;
 	private Statement statement = null;
@@ -32,7 +30,7 @@ public class DatabaseAccess {
 	 * Grant access to SQLite Database
 	 * @throws Exception
 	 */
-	public DatabaseAccess() throws Exception{
+	public DatabaseManager() throws Exception{
 
 		// this will load the SQLite driver, each DB has its own driver
 		Class.forName("org.sqlite.JDBC");
@@ -234,7 +232,7 @@ public class DatabaseAccess {
 	 * @param pass	Password from Register as Hash MD5
 	 * @return Successful/Failed entry in database
 	 */
-	public boolean addUser(String username, byte[] pass){
+	public boolean addUser(String username, byte[] pass, int isAdmin){
 		int rows = 0;
 		String query = "insert into USER(user_name, user_pw, is_admin) values (?, ?, ?)";
 		try {
@@ -243,7 +241,23 @@ public class DatabaseAccess {
 			// parameters start with 1
 			preparedStatement.setString(1, username);
 			preparedStatement.setBytes(2, pass);
-			preparedStatement.setInt(3, 0);
+			preparedStatement.setInt(3, isAdmin);
+			rows = preparedStatement.executeUpdate();
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return (rows > 0) ? true : false;
+	}
+	public boolean addVehicle(String vehiclename, byte[] imageInBytes){
+		int rows = 0;
+		String query = "insert into VEHICLE(vehicle_name, vehicle_logo) values (?, ?)";
+		try {
+			preparedStatement = connect.prepareStatement(query);
+			// "user_name, user_pw);
+			// parameters start with 1
+			preparedStatement.setString(1, vehiclename);
+			preparedStatement.setBytes(2, imageInBytes);
 			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
@@ -252,11 +266,11 @@ public class DatabaseAccess {
 		return (rows > 0) ? true : false;
 	}
 	/**
-	 * Add a new Vehicle to the User
+	 * Register a new Vehicle to the User.
 	 * 
 	 * @return Success/Error
 	 */
-	public Vehicle registerVehicle(int user_id, String vehicle_id){
+	public Vehicle registerVehicle(int user_id, int vehicle_id){
 		int rows = 0;
 		Vehicle vehicle = null;
 		String query = "Insert into VehiclePerUser(user_id, vehicle_id, alarm_status, add_date) values (?, ?, ?, ?)";
@@ -265,10 +279,8 @@ public class DatabaseAccess {
 		try {
 			long date = System.currentTimeMillis();
 			preparedStatement = connect.prepareStatement(query);
-			// "user_name, user_pw);
-			// parameters start with 1
 			preparedStatement.setInt(1, user_id);
-			preparedStatement.setString(2, vehicle_id);
+			preparedStatement.setInt(2, vehicle_id);
 			preparedStatement.setInt(3, 0);
 			preparedStatement.setLong(4, date);
 			rows = preparedStatement.executeUpdate();
@@ -283,13 +295,20 @@ public class DatabaseAccess {
 		}
 		return vehicle;
 	}
-	public boolean unregisterVehicle(int user_id, String vehicle_id){
+	/**
+	 * Unregister a vehicle for the user if he removes it from his list.
+	 * 
+	 * @param user_id	ID of the user who wants to remove a vehicle.
+	 * @param vehicle_id	ID of the vehicle which should be removed.
+	 * @return
+	 */
+	public boolean unregisterVehicle(int user_id, int vehicle_id){
 		int rows = 0;
 		String query = "DELETE FROM VehiclePerUser WHERE user_id=? AND vehicle_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, user_id);
-			preparedStatement.setString(2, vehicle_id);
+			preparedStatement.setInt(2, vehicle_id);
 			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {
@@ -297,13 +316,18 @@ public class DatabaseAccess {
 		} 
 		return (rows > 0) ? true : false;
 	}
-
-	private String getVehicleName(String vehicle_id){
+	/**
+	 * Get the vehicle for the given ID.
+	 * 
+	 * @param vehicle_id	ID of the vehicle to know the name about.
+	 * @return	
+	 */
+	private String getVehicleName(int vehicle_id){
 		String query = "Select vehicle_name from Vehicle where vehicle_id=?";
 		String name = null;
 		try{
 			preparedStatement = connect.prepareStatement(query);
-			preparedStatement.setString(1, vehicle_id);
+			preparedStatement.setInt(1, vehicle_id);
 			ResultSet rs2 = preparedStatement.executeQuery();
 			while(rs2.next())
 				name = rs2.getString(1);
@@ -314,7 +338,7 @@ public class DatabaseAccess {
 		return name;
 	}
 
-	public boolean toggleAlarm(int user_id, String vehicle_id, boolean status){
+	public boolean toggleAlarm(int user_id, int vehicle_id, boolean status){
 		int statusAsInt = status ? 1 : 0;
 		String query = "UPDATE vehiclePerUser SET alarm_status=? WHERE user_id=? AND vehicle_id=?";
 		int rows = 0;
@@ -322,7 +346,7 @@ public class DatabaseAccess {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setInt(1, statusAsInt);
 			preparedStatement.setInt(2, user_id);
-			preparedStatement.setString(3, vehicle_id);
+			preparedStatement.setInt(3, vehicle_id);
 			rows  = preparedStatement.executeUpdate();
 
 		} catch (SQLException e) {
@@ -388,7 +412,7 @@ public class DatabaseAccess {
 			ResultSet rs = preparedStatement.executeQuery();
 			while(rs.next()){
 				Vehicle vehicle = new Vehicle();
-				vehicle.setVehicleID(rs.getString(1));
+				vehicle.setVehicleID(rs.getInt(1));
 				vehicle.setAlarmStatus(rs.getInt(2));
 				vehicle.setDate(rs.getString(3));
 				vehicleList.add(vehicle);
@@ -402,7 +426,7 @@ public class DatabaseAccess {
 	}
 
 
-	public int addEvent(String vehicleID, String type, String time, String lat, String lon, byte[] image){
+	public int addEvent(int vehicleID, String type, String time, String lat, String lon, byte[] image){
 		int eventID = -1;
 		String query = "INSERT INTO event (event_type, event_time, event_lat, event_lon, event_image) "
 				+ "values (?, ?, ?, ?, ?)";
@@ -422,7 +446,7 @@ public class DatabaseAccess {
 					eventID = rs.getInt(1);
 				if(eventID >= 0){
 					preparedStatement = connect.prepareStatement(query2);
-					preparedStatement.setString(1, vehicleID);
+					preparedStatement.setInt(1, vehicleID);
 					preparedStatement.setInt(2, eventID);
 					preparedStatement.executeUpdate();
 				}
@@ -433,12 +457,12 @@ public class DatabaseAccess {
 		}
 		return eventID;
 	}
-	public String getVehicle(String vehicleID) {
+	public String getVehicle(int vehicleID) {
 		String vehicleName = "";
 		String query = "SELECT vehicle_name FROM vehicle WHERE vehicle_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
-			preparedStatement.setString(1, vehicleID);
+			preparedStatement.setInt(1, vehicleID);
 			ResultSet rs1 = preparedStatement.executeQuery();
 			while(rs1.next())
 				vehicleName = rs1.getString(1);
@@ -453,7 +477,7 @@ public class DatabaseAccess {
 	 * @param vehicleID	Current Vehicle Object
 	 * @return	List of Event Objects
 	 */
-	public Object[] getEvents(String vehicleID){
+	public Object[] getEvents(int vehicleID){
 		Object[] data = new Object[3];
 		ArrayList<Integer> event_ids = new ArrayList<Integer>();
 		String name = null;
@@ -462,14 +486,14 @@ public class DatabaseAccess {
 		String query2 = "SELECT Vehicle_Name, Vehicle_Logo FROM Vehicle WHERE vehicle_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query1);
-			preparedStatement.setString(1, vehicleID);
+			preparedStatement.setInt(1, vehicleID);
 			ResultSet rs1 = preparedStatement.executeQuery();
 			while(rs1.next())
 				event_ids.add(rs1.getInt(1));
 			preparedStatement.close();
 
 			preparedStatement = connect.prepareStatement(query2);
-			preparedStatement.setString(1, vehicleID);
+			preparedStatement.setInt(1, vehicleID);
 			ResultSet rs2 = preparedStatement.executeQuery();
 
 			while(rs2.next()){
@@ -495,13 +519,13 @@ public class DatabaseAccess {
 		return data;
 	}
 
-	public ArrayList<Integer> getNotificationUsers(String obuID) {
+	public ArrayList<Integer> getNotificationUsers(int obuID) {
 		ArrayList<Integer> user = new ArrayList<Integer>();
 		String query = "SELECT user_id FROM VehiclePerUser WHERE vehicle_id=? AND alarm_status=1";
 		String query2 = "SELECT COUNT(*) FROM session WHERE user_id=?";
 		try {
 			preparedStatement = connect.prepareStatement(query);
-			preparedStatement.setString(1, obuID);
+			preparedStatement.setInt(1, obuID);
 			ResultSet rs = preparedStatement.executeQuery();
 			while (rs.next()){
 				int userID = rs.getInt(1);
@@ -527,6 +551,7 @@ public class DatabaseAccess {
 			// parameters start with 1
 			preparedStatement.setInt(1, userID);
 			preparedStatement.setString(2, pathToVideo);
+			preparedStatement.setLong(3, System.currentTimeMillis());
 			rows = preparedStatement.executeUpdate();
 			preparedStatement.close();
 		} catch (SQLException e) {

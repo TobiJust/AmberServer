@@ -15,7 +15,7 @@ public class Event implements Serializable {
 	private int id;
 	private String eventType;
 	private String timeStamp;
-	private String vehicleID;
+	private int vehicleID;
 	private String vehicleName;
 	private double lat;
 	private double lon;
@@ -46,7 +46,7 @@ public class Event implements Serializable {
 		this.vehicleName = vehicleName;
 	}
 
-	public void setVehicleID(String id){
+	public void setVehicleID(int id){
 		this.vehicleID = id;
 	}
 
@@ -58,7 +58,7 @@ public class Event implements Serializable {
 		this.lon = lon;
 	}
 
-	public String getVehicleID(){
+	public int getVehicleID(){
 		return this.vehicleID;
 	}
 

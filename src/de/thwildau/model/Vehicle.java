@@ -14,7 +14,7 @@ public class Vehicle implements Serializable{
 	private static final long serialVersionUID = -1208507633758359464L;
 	private ArrayList<Event> eventList;
 	private String vehicleName;
-	private String vehicleID;
+	private int vehicleID;
 	public String date;
 	public byte[] image;
 	public boolean boxed;
@@ -40,7 +40,7 @@ public class Vehicle implements Serializable{
 	public ArrayList<Event> getEventList(){
 		return this.eventList;
 	}
-	public void setVehicleID(String vehicleID) {
+	public void setVehicleID(int vehicleID) {
 		this.vehicleID = vehicleID;
 	}
 
@@ -48,7 +48,7 @@ public class Vehicle implements Serializable{
 		return this.vehicleName;
 	}
 
-	public static ArrayList<Event> prepareEventList(String vehicleID){
+	public static ArrayList<Event> prepareEventList(int vehicleID){
 		ArrayList<Event> events = new ArrayList<Event>();
 		Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
 		ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
@@ -65,15 +65,14 @@ public class Vehicle implements Serializable{
 			event.setVehicleID(vehicleID);
 			// Add events to the current Vehicle
 			events.add(event);
-			System.out.println("############### " + vehicleID);
 		}
 		return events;
 	}
 	
-	public Vehicle prepareVehicle(String vehicleID) {
+	public Vehicle prepareVehicle(int vehicleID) {
 		Object[] vehicleData = AmberServer.getDatabase().getEvents(vehicleID);
-		ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 		this.vehicleName = (String)vehicleData[0];
+		ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 		this.setImage((byte[]) vehicleData[2]);
 		for(int eventID : eventIDList){
 			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
@@ -91,7 +90,7 @@ public class Vehicle implements Serializable{
 		return this;
 	}
 
-	public String getVehicleID() {
+	public int getVehicleID() {
 		return vehicleID;
 	}
 

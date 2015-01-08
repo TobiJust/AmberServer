@@ -4,13 +4,13 @@ import java.util.HashMap;
 
 public class StreamManager {
 	
-	public static HashMap<String, VideoStreamer> videoStreams = new HashMap<String, VideoStreamer>();
+	public static HashMap<Integer, VideoStreamer> videoStreams = new HashMap<Integer, VideoStreamer>();
 	
-	public static void addStream(String id, VideoStreamer stream){
+	public static void addStream(int id, VideoStreamer stream){
 		videoStreams.put(id, stream);
 	}
 
-	public static VideoStreamer getStream(String id){
+	public static VideoStreamer getStream(int id){
 		return videoStreams.get(id);
 	}
 }

@@ -1,9 +1,6 @@
 package de.thwildau.start;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -12,11 +9,10 @@ import de.thwildau.info.OBUMessage;
 import de.thwildau.obu.OBUResponseHandler;
 import de.thwildau.server.AmberServer;
 import de.thwildau.server.AmberServerHandler;
-import de.thwildau.stream.StreamManager;
-import de.thwildau.stream.VideoStreamer;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
+import de.thwildau.util.Util;
 import de.thwildau.webserver.AmberWebServer;
 
 
@@ -26,16 +22,16 @@ public class StartAmberServer {
 	private static String[] arguments;
 	private static OBUResponseHandler orh = new OBUResponseHandler();
 	protected static boolean running = true;
+	static int i = 0;
 
 	public static void main(String[] args){
 		arguments = args;		
-	
+
 		initLogger();
 		AmberServer.init();
 		AmberWebServer.init();
 
-		StreamManager.addStream("BMW_I8", new VideoStreamer());
-		
+
 		BufferedReader din = new BufferedReader(new InputStreamReader(System.in));
 		while(!quit){
 			System.out.print("> ");
@@ -47,7 +43,7 @@ public class StartAmberServer {
 					shutdown();
 					break;
 				case "defaults":
-					ServerLogger.log("Loading default properties...", true);
+					ServerLogger.log("Loading default properties...", Constants.DEBUG);
 					ServerPreferences.restoreDefaults();
 					ServerPreferences.storeProperties();
 					restart();
@@ -55,37 +51,52 @@ public class StartAmberServer {
 				case "restart":
 					restart();
 					break;
+				case "add user":
+					Util.addUser();
+					break;
 				case "show user":
-					ServerLogger.log(AmberServer.getDatabase().showAllUser(), true);
+					ServerLogger.log(AmberServer.getDatabase().showAllUser(), Constants.DEBUG);
+					break;
+				case "add vehicle":
+					Util.addVehicle();
+					break;
+				case "log on":
+					Constants.DEBUG = true;
+					break;
+				case "log off":
+					Constants.DEBUG = true;
 					break;
 				case "send":
-					new SendNotification("Oil", "Your_Oil", "CIT_C4");
-					ServerLogger.log("Send Notification", true);
+					new SendNotification("Oil", "Your_Oil", 1, "52.14", "13.37");
+					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "send1":
-					new SendNotification("Temperature", "Your_Temperature", "CIT_C4");
-					ServerLogger.log("Send Notification", true);
+					new SendNotification("Temperature", "Your_Temperature", 1, "52.14", "13.37");
+					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "send2":
-					new SendNotification("Bend", "Bend radius is too small", "BMW_I8");
-					ServerLogger.log("Send Notification", true);
+					new SendNotification("Bend", "Bend radius is too small", 5, "52.14", "13.37");
+					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "send3":
-					new SendNotification("Accident", "Crash", "AUD_A8");
-					ServerLogger.log("Send Notification", true);
+					new SendNotification("Accident", "Crash", 2, "52.14", "13.37");
+					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "obu":
 					byte[] b = {(byte)0x01};
-					OBUResponseHandler.handlers.get("123").write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+					OBUResponseHandler.handlers.get(123).write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
 					break;
 				case "obuDebug":
-//					final boolean running = true;
+					System.out.println("Start OBU Stream");
 					Runnable run = new Runnable() {
 						public void run() {
 							try {
-								for (int i = 0; i < 50; i++) {
-									Thread.sleep(1000);
-								}
+								if(running)
+									for (i = 0; i < 150; i++) {
+										Thread.sleep(100);
+										System.out.print(".");
+									}
+								
 								running = false;
 							} catch (InterruptedException e) {
 								System.out.println(" interrupted");
@@ -93,18 +104,25 @@ public class StartAmberServer {
 						}
 					};
 					new Thread(run).start();
-//					StreamManager.getStream("BMW_I8").startStream();
-//					StreamManager.getStream("BMW_I8").startRecord("BMW_I8");
-					try {
-						while(running){
-							boolean transactionState = orh.addData(Constants.sendData());
+					Runnable obu = new Runnable() {
+						public void run() {
+							while(running){
+								try {
+									orh.addData(Constants.sendData());
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+							System.out.println("Stream beendet for Debugging");
+							running = true;
+							i = 0;						
 						}
-//						StreamManager.getStream("BMW_I8").stopRecord("BMW_I8");
-//						StreamManager.getStream("BMW_I8").stopStream();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					};
+					new Thread(obu).start();
 
+					break;
+				default:
+					ServerLogger.log("Command not found", Constants.DEBUG);
 					break;
 				}
 			} catch (IOException e) {

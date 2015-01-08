@@ -10,12 +10,16 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class ImageData {
 
 	private ByteArrayOutputStream image = new ByteArrayOutputStream();
 
 	public ImageData(){
-
 	}
 
 	public void addData(List<Byte> list){
@@ -35,20 +39,18 @@ public class ImageData {
 		return null;
 	}
 	public BufferedImage getBufferedImage(){
-		// convert byte array back to BufferedImage
+		// convert byte array to BufferedImage
 		InputStream in = new ByteArrayInputStream(image.toByteArray());
 		try {
 			return ImageIO.read(in);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
 	public void writeImageToFile(int index){
 		try {
-			System.out.println("Write To File 2");
-			// convert byte array back to BufferedImage
+			// convert byte array to BufferedImage
 			InputStream in = new ByteArrayInputStream(image.toByteArray());
 			BufferedImage bImageFromConvert = ImageIO.read(in);
 

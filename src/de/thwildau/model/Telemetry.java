@@ -44,21 +44,22 @@ public class Telemetry {
 	
 	// ...
 
-	private String fuel;
-	private String speed;
-	private String revolutions;
-	private double lat;
-	private double lon;
-	private String drive;
-	private String airFlow;
-	private String airPressure;
-	private String airTemperature;
-	private String coolingLiqTemp;
-	private String fuelPressure;
-	private String enviroPressure;
-	private String kmAtAll;
-	private String km;
-	
+	private String fuel = "";
+	private String speed = "";
+	private String revolutions = "";
+	private double lat = 0.0;
+	private double lon = 0.0;
+	private String drive = "";
+	private String airFlow = "";
+	private String airPressure = "";
+	private String airTemperature = "";
+	private String coolingLiqTemp = "";
+	private String fuelPressure = "";
+	private String enviroPressure = "";
+	private String kmAtAll = "";
+	private String km = "";
+	private double engineLoad = Math.random()*100;
+
 	public Telemetry(){
 
 	}
@@ -200,6 +201,15 @@ public class Telemetry {
 	public void setKm(String km) {
 		this.km = km;
 	}
+	
+	public double getEngineLoad() {
+		return engineLoad;
+	}
+
+	public void setEngineLoad(double engineLoad) {
+		this.engineLoad = engineLoad;
+	}
+
 
 	public static String bytesToStringUTFCustom(List<Byte> bytes) {
 		char[] buffer = new char[bytes.size()];
@@ -212,6 +222,8 @@ public class Telemetry {
 	}
 
 	private double parseCoordinates(String coordsInMinutesSeconds){
+		if(coordsInMinutesSeconds.contains("--"))
+			return 0.0;
 		int index = 0;
 		String[] split = coordsInMinutesSeconds.split("");
 		if(split[0].equals("0"))

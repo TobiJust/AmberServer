@@ -3,8 +3,11 @@ package de.thwildau.webserver;
 import java.io.IOException;
 
 import org.codehaus.jackson.map.ObjectMapper;
-
-
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class WebsocketResponse{
 
 	private String id;
@@ -55,9 +58,11 @@ public class WebsocketResponse{
 	}
 
 	/**
+	 * JSONify this response object to send it as json string to the 
+	 * web app user. This enable a key value set for simple decoding 
+	 * on the web app.
 	 * 
-	 * @param response
-	 * @return
+	 * @return	Websocket response object as JSON String.
 	 */
 	public String toJSON(){
 		ObjectMapper mapper = new ObjectMapper();

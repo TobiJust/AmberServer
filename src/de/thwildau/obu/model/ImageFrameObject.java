@@ -10,12 +10,11 @@ public class ImageFrameObject extends FrameObject{
 	public ImageFrameObject(){
 		frame = new ArrayList<Byte>();
 	}
-	public String getDeviceID() throws Exception{
+	public int getDeviceID() throws Exception{
 		if(!checkLength())
 			throw new Exception("Out Of Bounds Exception - Index: " + 6 + " Frame size: " + frame.size());
 
-//		return frame.get(6);
-		return "123";
+		return frame.get(6);
 	}
 	public int getDatatype() throws Exception{
 		if(!checkLength())

@@ -13,13 +13,14 @@ import de.thwildau.obu.model.FrameObject;
 import de.thwildau.obu.model.TelemetryFrameObject;
 import de.thwildau.stream.StreamManager;
 import de.thwildau.stream.VideoStream;
+import de.thwildau.stream.VideoStreamer;
 import de.thwildau.webserver.WebsocketResponse;
 
 public class OBUResponseHandler {
 
 
 	private LinkedList<FrameObject> frameList = new LinkedList<FrameObject>();
-	public static ConcurrentHashMap<String, IoSession> handlers = new ConcurrentHashMap<String, IoSession>();
+	public static ConcurrentHashMap<Integer, IoSession> handlers = new ConcurrentHashMap<Integer, IoSession>();
 
 
 	int index = 0;
@@ -51,11 +52,24 @@ public class OBUResponseHandler {
 	 * @throws Exception 
 	 */
 	public boolean addData(byte[] data) throws Exception{	
-		System.out.println("Data Length " + data.length);
-		if(frameList.size() < 1 || frameList.get(frameList.size()-1).checkLength()) 
+
+		if(frameList.size() < 1 || frameList.get(frameList.size()-1).checkLength()){ 
+			System.out.println("LAST FRAME");
+			if(frameList.size() > 1){
+				for(byte b : frameList.get(frameList.size()-1).getFrame())
+					System.out.print(b + " ");
+				System.out.println();
+				System.out.println("CHECKSUM " + frameList.get(frameList.size()-1).checksum());
+				System.out.println("-----------------------------------------------------------------------------");
+				Thread.sleep(10000);
+			}
 			frameList.add(new FrameObject());
+			System.out.println("NEW FRAME ");
+		}
 
 		FrameObject lastFrame = frameList.get(frameList.size()-1);
+		Thread.sleep(50);
+
 		int count = 0;
 		if(!lastFrame.checkLength()){
 			count = lastFrame.append(data, 0);
@@ -65,17 +79,23 @@ public class OBUResponseHandler {
 				frameList.add(obj);
 			}			
 		}
-		System.out.println("Check Length " + lastFrame.checkLength());
-		System.out.println("Last Frame " + lastFrame.bodyLength()+9);
+		System.out.println("##################################");
+		for(byte b : frameList.get(frameList.size()-1).getFrame())
+			System.out.print(b + " ");
+		System.out.println();
+		System.out.println("##################################");
+		
 		if(lastFrame.getCurrentFrameSize() > 3)
 			System.out.println(lastFrame.getFrame().get(lastFrame.getCurrentFrameSize()-3) + " " 
 					+lastFrame.getFrame().get(lastFrame.getCurrentFrameSize()-2) + " " + 
 					lastFrame.getFrame().get(lastFrame.getCurrentFrameSize()-1));
+
 		if(lastFrame.checkLength()){
-			System.out.println("Size " + frameList.size());
-			System.out.println("Message ID " + lastFrame.getMessageID());
-			//			for(FrameObject fo : frameList){
 			switch(lastFrame.getMessageID()){
+			case 1:
+				int obuID = lastFrame.getDeviceID();
+				System.out.println(obuID);
+				break;
 			case 2:
 				//					(RequestFrameObject)fo;
 				break;
@@ -87,15 +107,15 @@ public class OBUResponseHandler {
 			default:
 				break;
 			}
-			System.out.println("Return True");
 			return true;
-			//			}
 		}
-		System.out.println("Return False");
+		for(byte b : lastFrame.getFrame())
+			System.out.print(b + " ");
+		System.out.println();
+		System.out.println("FALSE FALSE FALSE " + lastFrame.checkLength());
 		return false;
 	}
 	public boolean addImageToStream(FrameObject frame){
-		long startTime = System.currentTimeMillis();	
 
 		try {
 			switch(frame.getDatatype()){
@@ -123,8 +143,10 @@ public class OBUResponseHandler {
 				break;
 			}
 			if(isCorrect){
-				String response = new WebsocketResponse(WebsocketResponse.TELEMETRY, imageData.getData(), telemetry).toJSON();
-				StreamManager.getStream("BMW_I8").setImage(response);
+				WebsocketResponse response = new WebsocketResponse(WebsocketResponse.TELEMETRY, imageData.getData(), telemetry);
+				VideoStreamer streamer = StreamManager.getStream(5);
+				if(streamer != null)
+					streamer.setImage(response);
 			}
 
 		} catch (Exception e) {
@@ -137,7 +159,7 @@ public class OBUResponseHandler {
 	 * Write response to a File for Debug Issues.
 	 * @param output	Response Data
 	 */
-	public void writeToFile(){
+	public void writeToFile1(){
 		System.out.println("Write VideoStream");
 		try {
 			videoStream.getVideoStream();
