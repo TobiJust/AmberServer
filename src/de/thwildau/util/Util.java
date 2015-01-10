@@ -19,6 +19,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.thwildau.server.AmberServer;
 
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class Util {
 
 	/**

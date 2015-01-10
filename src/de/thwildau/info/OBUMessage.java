@@ -44,7 +44,11 @@ public class OBUMessage {
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * 
+	 * @param content
+	 * @return
+	 */
 	private byte[] payload(byte[] content) {
 		int payload_Length = 1 + content.length; // content.length + id (1 byte)
 		byte[] payload = new byte[2];
@@ -53,7 +57,12 @@ public class OBUMessage {
 
 		return payload;
 	}
-
+	/**
+	 * 
+	 * @param id
+	 * @param content
+	 * @return
+	 */
 	private byte checksum(byte id, byte[] content) {
 		byte checksum = (byte) (id ^ content[0]);
 		for(int i = 1; i < content.length; i++)
@@ -61,7 +70,10 @@ public class OBUMessage {
 
 		return checksum;
 	}
-
+	/**
+	 * 
+	 * @return
+	 */
 	public String getInfo(){
 		return this.info;
 	}	

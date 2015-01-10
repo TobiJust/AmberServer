@@ -36,7 +36,7 @@ public class AmberWebServer{
 			// Add Context
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 			context.setContextPath("/");
-			context.addServlet(new ServletHolder(new VideoDownload("myvideo.mp4")),"/download");
+			context.addServlet(new ServletHolder(new VideoDownload()),"/download");
 
 			// Add website resources to web server
 			ResourceHandler resource_handler = new ResourceHandler();
@@ -54,7 +54,7 @@ public class AmberWebServer{
 			ServerContainer wscontainer = WebSocketServerContainerInitializer.configureContext(context);
 
 			// Add WebSocket endpoint to websocket layer
-			wscontainer.addEndpoint(WebSocket.class);
+			wscontainer.addEndpoint(Websocket.class);
 
 			// Start Server
 			server.start();

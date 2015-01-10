@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
 
+import de.thwildau.model.Telemetry;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.webserver.WebsocketResponse;
@@ -17,9 +18,7 @@ public class VideoStreamer extends Thread {
 
 	private ConcurrentHashMap<Integer, VideoStream> streams = new ConcurrentHashMap<Integer, VideoStream>();
 	private byte[] image;
-	private boolean running = false;
 	private boolean watch = true;
-	private boolean recording = false;
 	private Session session;
 	private VideoStream videoStream;
 	private WebsocketResponse response;
@@ -37,18 +36,18 @@ public class VideoStreamer extends Thread {
 	 * @param session
 	 */
 	public void startStream(Session session){
-		System.out.println(StreamManager.videoStreams.keySet());
 		this.session = session;
 		if(!this.watch)
 			this.watch = true;
+		//		start();
 		ServerLogger.log("Stream started" , Constants.DEBUG);
 	}
 	/**
 	 * 
 	 */
 	public void stopStream() {
-		if(this.running)
-			this.running = false;
+		if(this.watch)
+			this.watch = false;
 		ServerLogger.log("Stream stopped" , Constants.DEBUG);
 	}
 
@@ -60,38 +59,58 @@ public class VideoStreamer extends Thread {
 		this.videoStream = new VideoStream(this, userID, vehicleID);
 		this.videoStream.startRecord();
 		streams.put(vehicleID, this.videoStream);
-		if(!this.recording)
-			this.recording = true;
 	}
 	/**
 	 * Stop recording the stream with given vehicle id.
 	 * @param vehicleID		ID of the vehicle to stop the video.
 	 */
 	public void stopRecord(int vehicleID){
-		if(this.recording)
-			this.recording = false;
 		if(streams.get(vehicleID) != null)
 			streams.get(vehicleID).getVideoStream();
 		ServerLogger.log("Stop Recording for Vehicle " + vehicleID, Constants.DEBUG);
 	}
-
-	public void setImage(WebsocketResponse response) {
+	/**
+	 * 
+	 * @param response
+	 */
+	public void setResponseData(WebsocketResponse response) {		
 		try {
 			if(response != null && this.session != null){
-				System.out.println(watch + " " +response);
 				this.response = response;
 				if(watch){
 					this.session.getBasicRemote().sendText(response.toJSON());
 				}	
 			}
-			Thread.sleep(500);
+			if(response != null && Constants.LOG)
+				logData((Telemetry)response.getData());
 		} catch (Exception e) {
 		}
 	}
-
+	/**
+	 * 
+	 * @return
+	 */
 	public WebsocketResponse getResponse() {
 		return this.response;
 	}
 
+	/**
+	 * 
+	 */
+	@Override
+	public void run() {
+		while(watch){
+			try {
+				if(getResponse() != null)
+					this.session.getBasicRemote().sendText(getResponse().toJSON());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
+	private void logData(Telemetry telemetry) {
+		StreamManager.log(telemetry.toString());
+	}
 
 }

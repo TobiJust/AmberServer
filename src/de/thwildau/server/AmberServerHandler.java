@@ -1,6 +1,5 @@
 package de.thwildau.server;
 
-
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -16,7 +15,7 @@ import de.thwildau.model.Event;
 import de.thwildau.model.User;
 import de.thwildau.model.UserData;
 import de.thwildau.model.Vehicle;
-import de.thwildau.obu.OBUResponseHandler;
+import de.thwildau.obu.OBUFrameHandler;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 
@@ -34,41 +33,41 @@ public class AmberServerHandler extends IoHandlerAdapter
 	private static AmberServerHandler handler = null;
 	private ConcurrentHashMap<IoSession, String> sessions = new ConcurrentHashMap<IoSession, String>();
 	private ConcurrentHashMap<Integer, TimerTask> timers = new ConcurrentHashMap<Integer, TimerTask>();
-	private ConcurrentHashMap<IoSession, OBUResponseHandler> obuHandlers = new ConcurrentHashMap<IoSession, OBUResponseHandler>();
 	private TimerTask task;
+
+	private Timer timer = new Timer();
 
 	public static AmberServerHandler getInstance(){
 		if(handler==null)
 			handler = new AmberServerHandler();
 		return handler;
 	}
-
+	/**
+	 * Called when a new session is created.
+	 */
 	public void sessionCreated(IoSession session) {
 		ServerLogger.log("Session created..." + session, Constants.DEBUG);
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
-
 
 //		try {
 //			Thread.sleep(2000);
 //		} catch (InterruptedException e) {
 //			e.printStackTrace();
 //		}
-//		byte[] b = {(byte)0x01};
-//		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-//		obuHandlers.put(session, new OBUResponseHandler());
+		byte[] b = {(byte)0x01};
+		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+		OBUFrameHandler.obuHandlers.put(session, new OBUFrameHandler());
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
 		ServerLogger.log("Session closed...", Constants.DEBUG);
 	}
-
+	/**
+	 * 
+	 */
 	@Override
-	public void exceptionCaught( IoSession session, Throwable cause ) throws Exception{
+	public void exceptionCaught(IoSession session, Throwable cause) throws Exception{
 		cause.printStackTrace();
-	}
-
-	public void messageWrite(Object message){
-
 	}
 
 	/**
@@ -81,6 +80,13 @@ public class AmberServerHandler extends IoHandlerAdapter
 	@Override
 	public void messageReceived( IoSession session, Object message ) throws Exception
 	{
+		System.out.println("data " + (byte[])message);
+		for(byte b : (byte[])message){
+			System.out.print(b + " ");
+		}
+		System.out.println();
+
+		
 		// Check for incoming Message from OBU or Application
 		ClientMessage receivedClientMessage = null;
 
@@ -175,7 +181,7 @@ public class AmberServerHandler extends IoHandlerAdapter
 			int eventID = (int) request[0];
 			int obuID = (int) request[1];
 			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
-			String vehicleName = AmberServer.getDatabase().getVehicle(obuID);
+			String vehicleName = AmberServer.getDatabase().getVehicleName(obuID);
 			String eventType = (String)eventData[1];
 			String eventTime = (String)eventData[2];
 			double eventLat = (double)eventData[3];
@@ -235,8 +241,10 @@ public class AmberServerHandler extends IoHandlerAdapter
 		case GET_EVENTLIST_BACKPRESS:
 		case GET_EVENTLIST:
 			vehicleID = (int) receivedClientMessage.getContent();
+			vehicleName = AmberServer.getDatabase().getVehicleName(vehicleID);
 			ArrayList<Event> events = Vehicle.prepareEventList(vehicleID);
-			responseMessage = new ClientMessage(receivedClientMessage.getId(), events);
+			Object[] eventResponse = {events, vehicleName};
+			responseMessage = new ClientMessage(receivedClientMessage.getId(), eventResponse);
 			session.write(responseMessage);
 			break;
 		case GET_VEHICLELIST_BACKPRESS:
@@ -261,7 +269,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 	private synchronized void closeSession(IoSession session){
 		try{
 			//			lock.lock();
-			//			obuHandlers.get(session).writeToFile();
 			sessions.remove(session);
 			session.close(true);
 		}
@@ -283,14 +290,44 @@ public class AmberServerHandler extends IoHandlerAdapter
 			//				obuHandlers.put(session, new OBUResponseHandler());
 			//			}
 			//			else{
-			if(obuHandlers.get(session) == null)
-				obuHandlers.put(session, new OBUResponseHandler());
-			boolean transactionState = obuHandlers.get(session).addData(data);
+			if(OBUFrameHandler.obuHandlers.get(session) == null)
+				OBUFrameHandler.obuHandlers.put(session, new OBUFrameHandler());
+
+			long current = 0;
+			long now = 0;
+			boolean transactionState = OBUFrameHandler.obuHandlers.get(session).addData(data);
 			if(transactionState){
 				byte[] b = {(byte)0x01};
 				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+				
+				current = System.currentTimeMillis();
+				
+				
+				//				if(task != null)
+				//					task.cancel();
+				//				task = null;
 			}
-			//			}
+			else{
+				System.out.println("ASDASD");				
+				
+//				while((now = System.currentTimeMillis()) > current + 200){
+//					System.out.println("New Request");
+//					byte[] b = {(byte)0x01};
+//					session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+//				};
+				
+				//				task = new TimerTask() {			
+				//					@Override
+				//					public void run() {
+				//						System.out.println("new Request " + Math.random());
+				//						byte[] b = {(byte)0x01};
+				//						session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+				//					}
+				//				};
+				//				timer.schedule(task, 1000);
+
+			}
+			//		}
 
 		} catch (Exception e) {
 			e.printStackTrace();

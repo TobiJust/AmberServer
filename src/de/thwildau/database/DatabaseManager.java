@@ -317,12 +317,12 @@ public class DatabaseManager {
 		return (rows > 0) ? true : false;
 	}
 	/**
-	 * Get the vehicle for the given ID.
+	 * Get the vehicle name for the given ID.
 	 * 
 	 * @param vehicle_id	ID of the vehicle to know the name about.
 	 * @return	
 	 */
-	private String getVehicleName(int vehicle_id){
+	public String getVehicleName(int vehicle_id){
 		String query = "Select vehicle_name from Vehicle where vehicle_id=?";
 		String name = null;
 		try{
@@ -337,7 +337,27 @@ public class DatabaseManager {
 		} 
 		return name;
 	}
-
+	/**
+	 * Get the user name for the given ID.
+	 * @param user_id	ID of the name to know the name about.
+	 * @return
+	 */
+	public String getUserName(int user_id){
+		String query = "Select user_name from User where user_id=?";
+		String name = null;
+		try{
+			preparedStatement = connect.prepareStatement(query);
+			preparedStatement.setInt(1, user_id);
+			ResultSet rs2 = preparedStatement.executeQuery();
+			while(rs2.next())
+				name = rs2.getString(1);
+			preparedStatement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		return name;
+	}
+	
 	public boolean toggleAlarm(int user_id, int vehicle_id, boolean status){
 		int statusAsInt = status ? 1 : 0;
 		String query = "UPDATE vehiclePerUser SET alarm_status=? WHERE user_id=? AND vehicle_id=?";
@@ -457,21 +477,7 @@ public class DatabaseManager {
 		}
 		return eventID;
 	}
-	public String getVehicle(int vehicleID) {
-		String vehicleName = "";
-		String query = "SELECT vehicle_name FROM vehicle WHERE vehicle_id=?";
-		try {
-			preparedStatement = connect.prepareStatement(query);
-			preparedStatement.setInt(1, vehicleID);
-			ResultSet rs1 = preparedStatement.executeQuery();
-			while(rs1.next())
-				vehicleName = rs1.getString(1);
-			preparedStatement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return vehicleName;
-	}
+	
 	/**
 	 * Return all Events mapped to a Vehicle Object.
 	 * @param vehicleID	Current Vehicle Object

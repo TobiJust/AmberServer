@@ -1,3 +1,21 @@
+.motorload {
+	position: fixed;
+	top: 0%;
+	left: 0;
+	height: 5%;
+	background: #ffcc33;
+	width: 1%;
+	opacity: 0.8;
+	box-shadow: 0 -11px 61px 48px #ffcc33;
+}
+
+.motorload_label {
+	color: #494949;
+	margin-top: 10px;
+	margin-left: 10px;q
+	width: 15px;
+	cursor: default;
+}
 
 .btnbar {
 	width: 80%;
@@ -21,6 +39,7 @@ button#btnrecord {
 	border-style: none;
 	outline: none;
 	background-repeat: no-repeat;
+	opacity: 0.1;
 }
 
 button#btncarpicker {

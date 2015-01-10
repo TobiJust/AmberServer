@@ -11,7 +11,7 @@ public class FrameObject {
 	private ArrayList<Byte> frame;
 
 	public FrameObject(){
-		frame = new ArrayList<Byte>();
+		frame = new ArrayList<Byte>(65545);
 	}
 
 	public boolean append(byte b){
@@ -30,7 +30,6 @@ public class FrameObject {
 
 	public boolean checkLength(){
 		if(!checkFrameBegin() || frame.size() < 5){
-			System.out.println("checkFrameBegin() " + checkFrameBegin() + " FRAME SIZE " + frame.size());
 			return false;
 		}
 		int length = bodyLength();
@@ -68,9 +67,11 @@ public class FrameObject {
 	}
 	public int checksum() throws Exception{
 		byte checksum = 0;
-		for(byte b : getChecksumData()){
-			checksum ^= b;
-		}
+		for(int i = 5; i < bodyLength() + 6; i++)
+			checksum ^= frame.get(i);
+//		for(byte b : getChecksumData()){
+//			checksum ^= b;
+//		}
 		return checksum;
 	}
 	public int getMessageID() throws Exception{

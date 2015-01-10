@@ -1,5 +1,11 @@
+@font-face {
+	font-family: segoe;
+	src: url(segoeuil.ttf);
+	font-weight: 500;
+}
+
 html {
-	font-family: "Segoe UI";
+	font-family: segoe;
 	color: #e0e0e0;
 /* 	overflow: hidden; */
 }
@@ -13,7 +19,7 @@ button, .car {
 }
 
 header.banner {
-	z-index: 10;
+	z-index: 11;
 	position: fixed;
 	width: 100%;
 	left: 0;
@@ -45,6 +51,21 @@ div.center {
 	top: 10%;
 	height: 75%;
 	width: 100%;
+	background-image: url("../pics/backblack.jpg");
+}
+
+.waitingforstream {
+	color: #ffcc33;
+	position: absolute;
+	text-shadow: 0 0 0.2em #ffcc33;
+	font-size: 20px;
+	text-align: center;
+	width: 200px;
+	height: 30px;
+	margin-left: -100px;
+	margin-top: -15px;
+	left: 50%;
+	top: 50%;
 }
 
 #videocontainer, #mapcontainer {

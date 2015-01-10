@@ -1,7 +1,7 @@
 package de.thwildau.server;
 
 /**
- * @author Just
+ * @author Tobias Just
  */
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -15,6 +15,11 @@ import de.thwildau.util.ServerCodecFactory;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
 
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class AmberServer{
 
 	private static NioSocketAcceptor acceptor;
@@ -46,7 +51,9 @@ public class AmberServer{
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * 
+	 */
 	public static void stop(){
 		getDatabase().close(null);
 	}

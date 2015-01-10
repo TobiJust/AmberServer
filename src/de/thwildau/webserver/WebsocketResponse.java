@@ -12,6 +12,7 @@ public class WebsocketResponse{
 
 	private String id;
 	private Object data;
+	private Object notification;
 	private byte[] image;
 
 	public static final String LOGIN = "loginACK";
@@ -29,10 +30,11 @@ public class WebsocketResponse{
 		this.id = id;
 		this.data = response;
 	}
-	public WebsocketResponse(String id, byte[] image, Object response){
+	public WebsocketResponse(String id, byte[] image, Object response, Object notification){
 		this.id = id;
 		this.data = response;
 		this.image = image;
+		this.notification = notification;
 	}
 
 	public byte[] getImage() {
@@ -57,6 +59,12 @@ public class WebsocketResponse{
 		this.data = data;
 	}
 
+	public Object getNotification() {
+		return notification;
+	}
+	public void setNotification(Object notification) {
+		this.notification = notification;
+	}
 	/**
 	 * JSONify this response object to send it as json string to the 
 	 * web app user. This enable a key value set for simple decoding 

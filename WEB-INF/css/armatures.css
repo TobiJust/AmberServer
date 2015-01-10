@@ -63,6 +63,7 @@
 	background-position: 10% 0;
 	background-repeat: no-repeat; 
 	background-size: 60% 45%;
+	opacity: 0.1;
 }
 
 .coolingliq {
@@ -114,7 +115,7 @@
 
 .ridelabel, .target_km, .target_kmall {
 	vertical-align: top;
-	color: #ffcc33;	
+	color: #494949;	
 	margin: 0;
 	display: inline-block;
 	font-size: 15px;
@@ -139,6 +140,7 @@
 	background-position: 0 5px;
 	background-size: 20px 24px;
 	background-repeat: no-repeat;
+	opacity: 0.1;
 }
 
 .fuelout {
@@ -149,12 +151,12 @@
 	margin-top: 7px;
 	height: 13px;
 	overflow: hidden;
-	border: 1px solid #ffcc33;
+	border: 1px solid #494949;
 }
 
 .fuelin {
 	height: 100%;
 	width: 50%;
-	background: #ffcc33;
+	background: #494949;
 }
 

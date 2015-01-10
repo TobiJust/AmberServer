@@ -10,6 +10,7 @@ public class TelemetryFrameObject extends FrameObject{
 	private ArrayList<Byte> frame;
 
 	public TelemetryFrameObject(ArrayList<Byte> data){
+		this.frame = new ArrayList<Byte>();
 		frame = data;
 	}
 

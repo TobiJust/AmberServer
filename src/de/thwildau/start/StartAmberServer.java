@@ -6,9 +6,11 @@ import java.io.InputStreamReader;
 
 import de.thwildau.gcm.SendNotification;
 import de.thwildau.info.OBUMessage;
-import de.thwildau.obu.OBUResponseHandler;
+import de.thwildau.obu.OBUFrameHandler;
 import de.thwildau.server.AmberServer;
 import de.thwildau.server.AmberServerHandler;
+import de.thwildau.stream.StreamManager;
+import de.thwildau.stream.VideoStreamer;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
@@ -20,7 +22,7 @@ public class StartAmberServer {
 
 	private static boolean quit = false;
 	private static String[] arguments;
-	private static OBUResponseHandler orh = new OBUResponseHandler();
+	private static OBUFrameHandler orh = new OBUFrameHandler();
 	protected static boolean running = true;
 	static int i = 0;
 
@@ -84,19 +86,20 @@ public class StartAmberServer {
 					break;
 				case "obu":
 					byte[] b = {(byte)0x01};
-					OBUResponseHandler.handlers.get(123).write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+					OBUFrameHandler.handlers.get(123).write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
 					break;
 				case "obuDebug":
 					System.out.println("Start OBU Stream");
+					StreamManager.addStream(5, new VideoStreamer());
 					Runnable run = new Runnable() {
 						public void run() {
 							try {
 								if(running)
-									for (i = 0; i < 150; i++) {
-										Thread.sleep(100);
+									for (i = 0; i < 1500; i++) {
+										Thread.sleep(1000);
 										System.out.print(".");
 									}
-								
+
 								running = false;
 							} catch (InterruptedException e) {
 								System.out.println(" interrupted");
@@ -134,7 +137,8 @@ public class StartAmberServer {
 
 	private static void initLogger(){
 		try {
-			ServerLogger.init(true);
+			ServerLogger.init(true);			
+			StreamManager.init();
 			ServerPreferences.loadProperties();
 		} catch (Exception e1) {
 			e1.printStackTrace();
@@ -152,6 +156,7 @@ public class StartAmberServer {
 	private static void shutdown(){
 		AmberServer.getAcceptor().dispose();
 		ServerLogger.stop(true);
+		StreamManager.stop();
 		ServerPreferences.storeProperties();
 		quit = true;
 	}

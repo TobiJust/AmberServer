@@ -12,8 +12,8 @@
 <link rel="stylesheet" type="text/css" href="css/carpicker.css">
 <link rel="stylesheet" type="text/css" href="css/notifier.css">
 <link rel="stylesheet" type="text/css" href="css/headermenu.css">
+<link rel="stylesheet" type="text/css" href="css/commandbar.css">
 <script type="text/javascript" src="js/jquery.js"></script>
-<script type="text/javascript" src="js/fx.js"></script>
 <!-- amber client namespace incoming -->
 <script type="text/javascript" src="js/amber.js"></script>
 <script type="text/javascript" src="js/amber.media.js"></script>
@@ -66,6 +66,9 @@ $(document).ready(function(){
 		</div>
 	</div>
 			<!-- MAIN APP MARKUP BEGINS HERE -->
+			<div class="motorload" title="Motorlast">
+			<p class="motorload_label" title="Motorlast">0%</p>
+		</div>
 	<header class="banner">
 		<div class="btnbar">
 			<button tabindex="-1" id="btnnotifier" title="Benachrichtigungen anzeigen"></button>
@@ -93,16 +96,16 @@ $(document).ready(function(){
 			</div>
 		</div>
 	</header>
+	<div class="commandbar">
+			<div class="command">
+				<p class="commandlabel">Langsamer fahren!</p>
+			</div>
+	</div>
 	<div class="center">
+		<p class="waitingforstream">Warte auf Videostream</p>
 		<div class="notifier">
 			<ul id="noticontainer">
-				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
-				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
-				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
-				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
-				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, 
-				rem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
-				<li class="notification">rem ipsum dolorempor invidunt ut labore et dolore magna al</li>
+				<li class="notification">lorem ipsum dolorempor invidunt ut labore et dolore magna aliquyam erat, </li>
 			</ul>
 		</div>
 		<div id="mapcontainer">

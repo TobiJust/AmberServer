@@ -18,11 +18,19 @@ import de.thwildau.util.ServerPreferences;
 public class SendNotification {
 	// Put your Google API Server Key here
 	private static final String GOOGLE_SERVER_KEY = ServerPreferences.getProperty(Constants.API_KEY);
-	private  final String MESSAGE_KEY = "message";
+	private final String MESSAGE_KEY = "message";
 	private static final String TYPE_KEY = "type";
 	private static final String OBU_KEY = "obuID";
 	private static final String EVENT_KEY = "eventID";
 
+	/**
+	 * 
+	 * @param type
+	 * @param msg
+	 * @param obuID
+	 * @param lat
+	 * @param lon
+	 */
 	public SendNotification(String type, String msg, int obuID, String lat, String lon){
 
 		/**

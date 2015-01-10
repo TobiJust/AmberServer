@@ -5,6 +5,11 @@ import java.util.ArrayList;
 
 import de.thwildau.server.AmberServer;
 
+/**
+ * 
+ * @author Tobias Just
+ *
+ */
 public class Vehicle implements Serializable{
 
 

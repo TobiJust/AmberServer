@@ -1,14 +1,7 @@
 package de.thwildau.model;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 /**
  * 
@@ -18,47 +11,34 @@ import javax.imageio.ImageIO;
 public class ImageData {
 
 	private ByteArrayOutputStream image = new ByteArrayOutputStream();
+	private byte[] byteArray;
 
 	public ImageData(){
 	}
-
+	/**
+	 * 
+	 * @param list
+	 */
 	public void addData(List<Byte> list){
 		try {
 			byte[] bytes = new byte[list.size()];
 			for(int i=0; i < list.size(); i++)
 				bytes[i] = list.get(i);
-			image.write(bytes);
-		} catch (IOException e) {
+			byteArray = bytes;
+//			image.write(bytes);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * 
+	 * @return
+	 */
 	public byte[] getData() {
-		if(image.size() > 0)
-			return image.toByteArray();
+//		if(image.size() > 0)
+//			return image.toByteArray();
+		if(byteArray.length > 1)
+			return byteArray;
 		return null;
-	}
-	public BufferedImage getBufferedImage(){
-		// convert byte array to BufferedImage
-		InputStream in = new ByteArrayInputStream(image.toByteArray());
-		try {
-			return ImageIO.read(in);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	public void writeImageToFile(int index){
-		try {
-			// convert byte array to BufferedImage
-			InputStream in = new ByteArrayInputStream(image.toByteArray());
-			BufferedImage bImageFromConvert = ImageIO.read(in);
-
-			ImageIO.write(bImageFromConvert, "jpg", new File(
-					"responseImage"+(index) +".jpg"));
-
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
-		}
 	}
 }
