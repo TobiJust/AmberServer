@@ -71,8 +71,8 @@ public class WebsocketHandler{
 
 		if (jsonObject instanceof JSONObject) {
 			request = new Object[jsonObject.keySet().size()];
-			request[0] = Util.safeLongToInt((long)jsonObject.get("carID"));
-			request[1] = (String)jsonObject.get("command");
+			request[0] = (String)jsonObject.get("command");
+//			request[1] = Util.safeLongToInt((long)jsonObject.get("carID"));
 		}
 		return request;
 	}	

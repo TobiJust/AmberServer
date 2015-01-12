@@ -21,23 +21,35 @@ import de.thwildau.util.ServerLogger;
 
 
 public class DatabaseManager {
-	// JDBC
-	private Connection connect = null;
-	private Statement statement = null;
-	private PreparedStatement preparedStatement = null;
-
 	/**
-	 * Grant access to SQLite Database
-	 * @throws Exception
+	 *  JDBC Connection to the SQLite Database
+	 */
+	private Connection connect = null;
+	/**
+	 * SQLite Statement to execute queries.
+	 */
+	private Statement statement = null;
+	/**
+	 * SQLite Statements that will be prepared for later queries. 
+	 * They contain placeholder to fill up with variables.
+	 */
+	private PreparedStatement preparedStatement = null;
+	/**
+	 * Grant access to SQLite Database and manage all requests to and responses 
+	 * from the database.
+	 * 
+	 * @throws Exception	Throw Exception if the database is locked or a sql 
+	 * 						statement cant' be executed.
 	 */
 	public DatabaseManager() throws Exception{
 
 		// this will load the SQLite driver, each DB has its own driver
 		Class.forName("org.sqlite.JDBC");
 
-		// setup the connection with the DB.
+		// setup the connection with the DB
 		connect = DriverManager.getConnection("jdbc:sqlite:amber.db");
 
+		// Run the database connection in a seperate thread
 		Runtime.getRuntime().addShutdownHook(new Thread() { 
 			public void run() { 
 				try { 
@@ -228,17 +240,15 @@ public class DatabaseManager {
 	/**
 	 * Add a new User to the Database.
 	 * 
-	 * @param username from Register
-	 * @param pass	Password from Register as Hash MD5
-	 * @return Successful/Failed entry in database
+	 * @param username 	The username from register dialog.
+	 * @param pass	Password from register dialog as Hash MD5.
+	 * @return Successful/Failed entry in database.
 	 */
 	public boolean addUser(String username, byte[] pass, int isAdmin){
 		int rows = 0;
 		String query = "insert into USER(user_name, user_pw, is_admin) values (?, ?, ?)";
 		try {
 			preparedStatement = connect.prepareStatement(query);
-			// "user_name, user_pw);
-			// parameters start with 1
 			preparedStatement.setString(1, username);
 			preparedStatement.setBytes(2, pass);
 			preparedStatement.setInt(3, isAdmin);
@@ -249,13 +259,18 @@ public class DatabaseManager {
 		}
 		return (rows > 0) ? true : false;
 	}
+	/**
+	 * Add a new Vehicle to the Database.
+	 * 
+	 * @param vehiclename	The name of the new vehicle, that should be registered.
+	 * @param imageInBytes	A logo of the vehicle, which will show up by car picking in app and web app.
+	 * @return	Successful/Failed entry in database.
+	 */
 	public boolean addVehicle(String vehiclename, byte[] imageInBytes){
 		int rows = 0;
 		String query = "insert into VEHICLE(vehicle_name, vehicle_logo) values (?, ?)";
 		try {
 			preparedStatement = connect.prepareStatement(query);
-			// "user_name, user_pw);
-			// parameters start with 1
 			preparedStatement.setString(1, vehiclename);
 			preparedStatement.setBytes(2, imageInBytes);
 			rows = preparedStatement.executeUpdate();
@@ -268,7 +283,9 @@ public class DatabaseManager {
 	/**
 	 * Register a new Vehicle to the User.
 	 * 
-	 * @return Success/Error
+	 * @param user_id	ID of the user, the vehicle should mapped to.
+	 * @param vehicle_id	ID of the vehicle to register.
+	 * @return	The vehicle mapped to the user.
 	 */
 	public Vehicle registerVehicle(int user_id, int vehicle_id){
 		int rows = 0;
@@ -320,7 +337,7 @@ public class DatabaseManager {
 	 * Get the vehicle name for the given ID.
 	 * 
 	 * @param vehicle_id	ID of the vehicle to know the name about.
-	 * @return	
+	 * @return	Vehicle name as String.
 	 */
 	public String getVehicleName(int vehicle_id){
 		String query = "Select vehicle_name from Vehicle where vehicle_id=?";
@@ -339,8 +356,9 @@ public class DatabaseManager {
 	}
 	/**
 	 * Get the user name for the given ID.
+	 * 
 	 * @param user_id	ID of the name to know the name about.
-	 * @return
+	 * @return	User name as String.
 	 */
 	public String getUserName(int user_id){
 		String query = "Select user_name from User where user_id=?";
@@ -357,7 +375,15 @@ public class DatabaseManager {
 		} 
 		return name;
 	}
-	
+	/**
+	 * Toggle the alarm for the notificatin status. It set the alarm status for the user 
+	 * and favorite vehicle. 
+	 * 
+	 * @param user_id	ID of the user who wants to set the alarm.
+	 * @param vehicle_id	ID of the vehicle the user wants to be alarmed by events.
+	 * @param status	Status to be set.
+	 * @return	The set status.
+	 */
 	public boolean toggleAlarm(int user_id, int vehicle_id, boolean status){
 		int statusAsInt = status ? 1 : 0;
 		String query = "UPDATE vehiclePerUser SET alarm_status=? WHERE user_id=? AND vehicle_id=?";
@@ -380,7 +406,7 @@ public class DatabaseManager {
 	/**
 	 * Execute Query to show all current User.
 	 * 
-	 * @return List of all User.
+	 * @return List of all User as String.
 	 */
 	public String showAllUser(){
 		String result = "\n";
@@ -396,9 +422,27 @@ public class DatabaseManager {
 	}
 
 	/**
-	 * Get GCM Registration Ids.
+	 * Execute Query to show all current Vehicles.
 	 * 
-	 * @return List of all Registration Ids.
+	 * @return List of all Vehicles as String.
+	 */
+	public String showAllVehicles(){
+		String result = "\n";
+		try {
+			statement = connect.createStatement();
+			ResultSet rs = statement.executeQuery( "SELECT * FROM VEHICLE;" );
+			result += writeResultSet(rs);
+			//			close(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	/**
+	 * Get GCM Registration IDs.
+	 * 
+	 * @return List of all Registration IDs.
 	 */
 	public List<String> getGCMRegIds(int user_id){
 		String query = "SELECT gcm_regid FROM GCM WHERE user_id=?;"; 
@@ -411,8 +455,6 @@ public class DatabaseManager {
 			String colName = rm.getColumnName(1);
 			while (rs.next())
 				regIds.add(rs.getString(colName));
-
-			//			close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}		
@@ -446,7 +488,7 @@ public class DatabaseManager {
 	}
 
 
-	public int addEvent(int vehicleID, String type, String time, String lat, String lon, byte[] image){
+	public int addEvent(int vehicleID, String type, String time, double lat, double lon, byte[] image){
 		int eventID = -1;
 		String query = "INSERT INTO event (event_type, event_time, event_lat, event_lon, event_image) "
 				+ "values (?, ?, ?, ?, ?)";
@@ -456,8 +498,8 @@ public class DatabaseManager {
 			preparedStatement = connect.prepareStatement(query);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, time);
-			preparedStatement.setString(3, lat);
-			preparedStatement.setString(4, lon);
+			preparedStatement.setDouble(3, lat);
+			preparedStatement.setDouble(4, lon);
 			preparedStatement.setBytes(5, image);
 			int rows = preparedStatement.executeUpdate();
 			if(rows > 0){
@@ -477,9 +519,10 @@ public class DatabaseManager {
 		}
 		return eventID;
 	}
-	
+
 	/**
-	 * Return all Events mapped to a Vehicle Object.
+	 * Return all Events mapped to a vehicle ID.
+	 * 
 	 * @param vehicleID	Current Vehicle Object
 	 * @return	List of Event Objects
 	 */
@@ -524,7 +567,12 @@ public class DatabaseManager {
 		data[2] = imageInByte;
 		return data;
 	}
-
+	/**
+	 * Return all user id that are allowed to get a notification.
+	 * 
+	 * @param obuID	ID of the vehicle for alarm issues
+	 * @return	List of all user id's that will receive a notification
+	 */
 	public ArrayList<Integer> getNotificationUsers(int obuID) {
 		ArrayList<Integer> user = new ArrayList<Integer>();
 		String query = "SELECT user_id FROM VehiclePerUser WHERE vehicle_id=? AND alarm_status=1";
@@ -547,7 +595,13 @@ public class DatabaseManager {
 		}		
 		return user;
 	}
-
+	/**
+	 * Store the path of a recorded video in the database by the user.
+	 * 
+	 * @param userID	ID of the user that wants to store the video.
+	 * @param pathToVideo	Path to the video located on the file system.
+	 * @return
+	 */
 	public boolean storeVideostream(int userID, String pathToVideo){
 		int rows = 0;
 		String query = "INSERT INTO video (user_id, video_path, time_stamp) values (?, ?, ?)";
@@ -568,7 +622,8 @@ public class DatabaseManager {
 	}
 	/**
 	 * Return the data of an Event.
-	 * @param eventID	Current Event
+	 * 
+	 * @param eventID	Current Event ID.
 	 * @return	All Attributes of an Event in an Array.
 	 */
 	public Object[] getEventData(int eventID){
@@ -587,12 +642,14 @@ public class DatabaseManager {
 					eventData[i] = rs.getObject(i+1);
 				try {
 					BufferedImage image = ImageIO.read(rs.getBinaryStream(eventData.length));
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					ImageIO.write(image, "jpg", baos);
-					baos.flush();
-					byte[] imageInByte = baos.toByteArray();
-					baos.close();
-					eventData[i] = imageInByte;
+					if(image != null){
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						ImageIO.write(image, "jpg", baos);
+						baos.flush();
+						byte[] imageInByte = baos.toByteArray();
+						baos.close();
+						eventData[i] = imageInByte;
+					}					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -630,7 +687,11 @@ public class DatabaseManager {
 		return result;
 	}
 
-	// you need to close all three to make sure
+	/**
+	 *  Close all open statements, the result set and the database connection.
+	 *
+	 * @param resultSet
+	 */
 	public void close(ResultSet resultSet) {
 		try {
 			if(resultSet != null) resultSet.close();

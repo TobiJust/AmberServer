@@ -10,7 +10,7 @@
 }
 
 .motorload_label {
-	color: #494949;
+	color: #080808;
 	margin-top: 10px;
 	margin-left: 10px;q
 	width: 15px;
@@ -31,6 +31,9 @@ button#btnnotifier,
 button#btnswitchview,
 button#btnscreenshot,
 button#btnlogout,
+button#btndownload,
+button#btndownloadscreen,
+button#btnaddcar,
 button#btnrecord {
 	height: 100%;
 	width: 10%;
@@ -84,12 +87,34 @@ button#btnrecord {
 	font-size: 20px;
 }
 
+button#btndownload,
+button#btndownloadscreen {
+	display: none;
+	background-image: url('../pics/arrow.png');
+	background-position: 50% 50%;
+	background-size: 25px 25px;
+}
+
+button#btnaddcar {
+	background-image: url('../pics/addcar.png');
+	background-position: 50% 50%;
+	background-size: 45px 30px;
+	position: absolute; 
+	width: 50px;
+	height: 50px;
+	margin-left: 440px;
+	margin-top: 5px;
+	opacity: 1;
+}
+
 button#btncommands:active,
 button#btncarpicker:active,
 button#btnnotifier:active,
 button#btnswitchview:active,
 button#btnscreenshot:active,
 button#btnlogout:active,
+button#btndownload:active,
+button#btndownloadscreen:active,
 button#btnrecord:active {
 	background-color: #ffcc33;
 }

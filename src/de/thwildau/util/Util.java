@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
@@ -43,7 +44,7 @@ public class Util {
 			ServerLogger.log(Constants.SUCCESS_REGISTER, Constants.DEBUG);
 		else
 			ServerLogger.log(Constants.ERROR_REGISTER, Constants.DEBUG);
-			
+
 	}
 	/**
 	 * 
@@ -60,7 +61,7 @@ public class Util {
 			ServerLogger.log(Constants.SUCCESS_ADD_VEHICLE, Constants.DEBUG);
 		else
 			ServerLogger.log(Constants.ERROR_ADD_VEHICLE, Constants.DEBUG);
-			
+
 	}
 	/**
 	 * 
@@ -75,7 +76,7 @@ public class Util {
 		}
 		return (int) l;
 	}
-	
+
 	/**
 	 * 
 	 * @param pass
@@ -97,45 +98,59 @@ public class Util {
 		}
 		return hashed;
 	}
-	
+	/**
+	 * 
+	 * @param bytes 
+	 * @return
+	 */
+	public static String bytesToStringUTFCustom(List<Byte> bytes) {
+		char[] buffer = new char[bytes.size()];
+		for(int i = 0; i < buffer.length; i++) {
+			int bpos = i;
+			char c = (char)(((bytes.get(bpos)&0xFF)));
+			buffer[i] = c;
+		}
+		return new String(buffer);
+	}
+
 	private static byte[] openFilechooser() { 
 		byte[] imageData = null;
-        final JFileChooser chooser = new JFileChooser("Verzeichnis wählen"); 
-        chooser.setDialogType(JFileChooser.OPEN_DIALOG); 
-        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); 
-        FileFilter imageFilter = new FileNameExtensionFilter(
-        	    "Image files", ImageIO.getReaderFileSuffixes());
-        chooser.setFileFilter(imageFilter);
-        final File directory = new File("~"); 
+		final JFileChooser chooser = new JFileChooser("Verzeichnis wählen"); 
+		chooser.setDialogType(JFileChooser.OPEN_DIALOG); 
+		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); 
+		FileFilter imageFilter = new FileNameExtensionFilter(
+				"Image files", ImageIO.getReaderFileSuffixes());
+		chooser.setFileFilter(imageFilter);
+		final File directory = new File("~"); 
 
-        chooser.setCurrentDirectory(directory); 
+		chooser.setCurrentDirectory(directory); 
 
-        chooser.addPropertyChangeListener(new PropertyChangeListener() { 
-            public void propertyChange(PropertyChangeEvent e) { 
-                if (e.getPropertyName().equals(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY) 
-                        || e.getPropertyName().equals(JFileChooser.DIRECTORY_CHANGED_PROPERTY)) { 
-                    final File f = (File) e.getNewValue(); 
-                } 
-            } 
-        }); 
+		chooser.addPropertyChangeListener(new PropertyChangeListener() { 
+			public void propertyChange(PropertyChangeEvent e) { 
+				if (e.getPropertyName().equals(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY) 
+						|| e.getPropertyName().equals(JFileChooser.DIRECTORY_CHANGED_PROPERTY)) { 
+					e.getNewValue(); 
+				} 
+			} 
+		}); 
 
-        chooser.setVisible(true); 
-        final int result = chooser.showOpenDialog(null); 
+		chooser.setVisible(true); 
+		final int result = chooser.showOpenDialog(null); 
 
 		if (result == JFileChooser.APPROVE_OPTION) { 
-            File file = chooser.getSelectedFile(); 
-            String pathToFile = file.getPath(); 
-            System.out.println(pathToFile); 
-            Path path = Paths.get(pathToFile);
+			File file = chooser.getSelectedFile(); 
+			String pathToFile = file.getPath(); 
+			System.out.println(pathToFile); 
+			Path path = Paths.get(pathToFile);
 			try {
 				imageData = Files.readAllBytes(path);
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-        } 
-        
-        chooser.setVisible(false); 
-        return imageData;
-    } 
-	
+		} 
+
+		chooser.setVisible(false); 
+		return imageData;
+	} 
+
 }

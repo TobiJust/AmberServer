@@ -21,9 +21,13 @@
 
 .notification {
 	margin: 5px;
-	min-height: 50px;
+	min-height: 20px;
 	padding-bottom: 15px;
 	width: 100%;
 	border-bottom: 1px solid #ffcc33;
 }
 
+.notiproperties {
+	list-style-type: none;
+	margin-left: 5px;
+}

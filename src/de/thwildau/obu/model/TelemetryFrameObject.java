@@ -48,7 +48,6 @@ public class TelemetryFrameObject extends FrameObject{
 			return true;
 		return false;
 	}
-
 	public boolean checkFrameBegin(){
 		if(frame.size() < 3)
 			return false;

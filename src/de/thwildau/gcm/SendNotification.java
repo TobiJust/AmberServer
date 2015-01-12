@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import de.thwildau.gcm.google.Message;
 import de.thwildau.gcm.google.MulticastResult;
 import de.thwildau.gcm.google.Sender;
+import de.thwildau.model.Event;
 import de.thwildau.server.AmberServer;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerPreferences;
@@ -31,7 +32,7 @@ public class SendNotification {
 	 * @param lat
 	 * @param lon
 	 */
-	public SendNotification(String type, String msg, int obuID, String lat, String lon){
+	public SendNotification(Event event, int obuID){
 
 		/**
 		 *  Get valid GCM Registration IDs from the database.
@@ -40,23 +41,27 @@ public class SendNotification {
 		 */
 		ArrayList<Integer> userList = AmberServer.getDatabase().getNotificationUsers(obuID);
 		List<String> regIdList = new ArrayList<String>();
-		for(int id : userList)
+		for(int id : userList){
 			regIdList.addAll(AmberServer.getDatabase().getGCMRegIds(id));
+		}
 
+		byte[] imageInByte = event.getEventImage();
 		try	{
 			//-------------------------------------
 			BufferedImage img = ImageIO.read(new File("responseImage.jpg"));
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write( img, "jpg", baos );
 			baos.flush();
-			byte[] imageInByte = baos.toByteArray();
+			if(imageInByte == null)
+				imageInByte = baos.toByteArray();
 			baos.close();
 			//-------------------------------------
-			int eventID = AmberServer.getDatabase().addEvent(obuID, type, "12122014-112534", lat, lon, imageInByte);
-			
+			int eventID = AmberServer.getDatabase().addEvent(obuID, event.getEventType(), event.getTimeStamp(),
+					event.getLatitude(), event.getLongitude(), imageInByte);
+
 			Sender sender = new Sender(GOOGLE_SERVER_KEY);
 			Message message = new Message.Builder().timeToLive(30)
-					.delayWhileIdle(true).addData(MESSAGE_KEY, msg).addData(TYPE_KEY, type)
+					.delayWhileIdle(true).addData(MESSAGE_KEY, event.getEventMessage()).addData(TYPE_KEY, event.getEventType())
 					.addData(EVENT_KEY, ""+eventID).addData(OBU_KEY, ""+obuID)
 					.build();	
 			MulticastResult result = sender.send(message, regIdList, 3);

@@ -22,6 +22,7 @@ import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
 
+import de.thwildau.feature.VideoDownload;
 import de.thwildau.model.Telemetry;
 import de.thwildau.server.AmberServer;
 import de.thwildau.util.Constants;
@@ -40,7 +41,7 @@ public class VideoStream extends Thread{
 	/**
 	 * The size of the text on the video stream.
 	 */
-	private static final int TEXT_SIZE = 10;
+	private static final int TEXT_SIZE = 8;
 	/**
 	 * Store video streams in a HashMap to retrieve them for later usage.
 	 */
@@ -142,7 +143,10 @@ public class VideoStream extends Thread{
 	 */
 	public void getVideoStream(){
 		this.running  = false;
-		streams.get(0).close();
+		try {
+			streams.get(0).close();			
+		} catch (Exception e) {
+		}
 
 		// Store the path of the written file in the database for the user
 		AmberServer.getDatabase().storeVideostream(userID, outputFilename);
@@ -181,21 +185,28 @@ public class VideoStream extends Thread{
 
 			//			g.drawString(telemetry.toString(), 0, bgrScreen.getHeight()-20);
 			g.drawString("Speed", 10, bgrScreen.getHeight()-(TEXT_SIZE+5));
-			g.drawString(""+telemetry.getSpeed(), 60, bgrScreen.getHeight()-(TEXT_SIZE+5));
+			g.drawString(""+telemetry.getSpeed(), 100, bgrScreen.getHeight()-(TEXT_SIZE+5));
 			g.drawString("Lat|Lon", 10, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
 			g.drawString(+Math.round(telemetry.getLat()*100.0)/100.0+"|"+Math.round(telemetry.getLon()*100.0)/100.0,
-					60, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
+					100, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
 			g.drawString("KM", 10, bgrScreen.getHeight()-(3*(TEXT_SIZE+5)));
-			g.drawString(""+telemetry.getKm(), 60, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getKm(), 100, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
 			g.drawString("Fuel", 10, bgrScreen.getHeight()-(4*(TEXT_SIZE+5)));
-			g.drawString(""+telemetry.getFuel(), 60, bgrScreen.getHeight()-(4*(TEXT_SIZE+5)));
-			
-			g.drawString("Gyro Z", 120, bgrScreen.getHeight()-(TEXT_SIZE+5));
-			g.drawString(""+telemetry.getGyro_z(), 250, bgrScreen.getHeight()-(TEXT_SIZE+5));
-			g.drawString("Gyro Y", 120, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
-			g.drawString(""+telemetry.getGyro_y(), 250, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
-			g.drawString("Gyro X", 120, bgrScreen.getHeight()-(3*(TEXT_SIZE+5)));
-			g.drawString(""+telemetry.getGyro_x(), 250, bgrScreen.getHeight()-(3*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getFuel(), 100, bgrScreen.getHeight()-(4*(TEXT_SIZE+5)));
+
+			g.drawString("Gyro Z", 150, bgrScreen.getHeight()-(TEXT_SIZE+5));
+			g.drawString(""+telemetry.getGyro_z(), 180, bgrScreen.getHeight()-(TEXT_SIZE+5));
+			g.drawString("Gyro Y", 150, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getGyro_y(), 180, bgrScreen.getHeight()-(2*(TEXT_SIZE+5)));
+			g.drawString("Gyro X", 150, bgrScreen.getHeight()-(3*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getGyro_x(), 180, bgrScreen.getHeight()-(3*(TEXT_SIZE+5)));
+
+			g.drawString("ACC Z", 150, bgrScreen.getHeight()-(4*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getAcceleration_z(), 180, bgrScreen.getHeight()-(4*(TEXT_SIZE+5)));
+			g.drawString("ACC Y", 150, bgrScreen.getHeight()-(5*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getAcceleration_y(), 180, bgrScreen.getHeight()-(5*(TEXT_SIZE+5)));
+			g.drawString("ACC X", 150, bgrScreen.getHeight()-(6*(TEXT_SIZE+5)));
+			g.drawString(""+telemetry.getAcceleration_x(), 180, bgrScreen.getHeight()-(6*(TEXT_SIZE+5)));
 
 			// encode the image to stream #0
 			if(running)

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="utf-8">
 <title>Amber Control Panel</title>
-<link rel="shortcut icon" href="pics/amber_gr.png" type="image/x-icon" />
+<link rel="shortcut icon" href="pics/amberico.png" type="image/x-icon" />
 <script type="text/javascript" src="http://www.openlayers.org/api/OpenLayers.js"></script>
 <script type="text/javascript" src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
 <link rel="stylesheet" type="text/css" href="css/general.css">
@@ -13,6 +13,7 @@
 <link rel="stylesheet" type="text/css" href="css/notifier.css">
 <link rel="stylesheet" type="text/css" href="css/headermenu.css">
 <link rel="stylesheet" type="text/css" href="css/commandbar.css">
+<link rel="stylesheet" type="text/css" href="css/addcar.css">
 <script type="text/javascript" src="js/jquery.js"></script>
 <!-- amber client namespace incoming -->
 <script type="text/javascript" src="js/amber.js"></script>
@@ -25,8 +26,9 @@
 <script type="text/javascript">
 $(document).ready(function(){
 // 	$('.loginfade, .loginbody, .loginmaterial').toggle();
+// 	$('.loginbody, .carpickerbody').toggle();
 	amber.ui.initLiveView();
-	amber.net.initSocket();
+	amber.net.initSocket();	 
 });
 </script>
 </head>
@@ -37,14 +39,15 @@ $(document).ready(function(){
 		<div class="loginsepline"></div>	
 	</div>
 	<div class="carpickerbody">
+		<button tabindex="-1" id="btnaddcar" title="Fahrzeug hinzufÃ¼gen"></button>
 		<div class="carpickerrow">
-			<p class="welcome">WÄHLEN SIE EIN FAHRZEUG:</p>
+			<p class="welcome">WÃ„HLEN SIE EIN FAHRZEUG:</p>
 		</div>
 		<div class="carpickerrow">
 			<div class="carpicker">
 				<ul class="carcontainer">
 					<li class="car"><p>Audi A8</p>
-						<img src="pics/command.png" style="width:100%;">
+<!-- 						<img src="pics/command.png" style="width:100%;"> -->
 					</li>
 				</ul>
 			</div>
@@ -65,18 +68,32 @@ $(document).ready(function(){
 			<button class="loginsubmit" type="submit">ANMELDEN</button>
 		</div>
 	</div>
-			<!-- MAIN APP MARKUP BEGINS HERE -->
-			<div class="motorload" title="Motorlast">
-			<p class="motorload_label" title="Motorlast">0%</p>
+	<div class="caraddbody">
+		<div class="loginrow">
+			<p class="welcome">FÃ¼gen Sie ein Fahrzeug hinzu:</p>
+			<p class="info"></p>
 		</div>
+		<div class="loginrow addcarrow">
+			<div class="label">Onboard Unit ID:</div><input class="loginfield" type="obuid">
+		</div>
+		<div class="loginrow">
+			<button class="newcarsubmit" type="submit">HINZUFÃœGEN</button>
+		</div>
+	</div>
+			<!-- MAIN APP MARKUP BEGINS HERE -->
+	<div class="motorload" title="Motorlast">
+		<p class="motorload_label" title="Motorlast">0%</p>
+	</div>
 	<header class="banner">
 		<div class="btnbar">
 			<button tabindex="-1" id="btnnotifier" title="Benachrichtigungen anzeigen"></button>
-			<button tabindex="-1" id="btncarpicker" title="Anderes Fahrzeug wählen"></button>
+			<button tabindex="-1" id="btncarpicker" title="Anderes Fahrzeug wï¿½hlen"></button>
 			<button tabindex="-1" id="btnswitchview" title="Karten-/Videoansicht wechseln"></button>
 			<button tabindex="-1" id="btnrecord" title="Videoaufnahme starten">REC</button>
+			<button tabindex="-1" id="btndownload" title="Video herunterladen"></button>
 			<button tabindex="-1" id="btnscreenshot" title="Screenshot"></button>
-			<button tabindex="-1" id="btncommands" title="Befehl übermitteln"></button>
+			<button tabindex="-1" id="btndownloadscreen" title="Screenshot	 herunterladen"></button>
+			<button tabindex="-1" id="btncommands" title="Befehl Ã¼bermitteln"></button>
 			<button tabindex="-1" id="btnlogout" title="Abmelden"></button>
 		</div>
 		<div class="ridedata">
@@ -97,8 +114,11 @@ $(document).ready(function(){
 		</div>
 	</header>
 	<div class="commandbar">
-			<div class="command">
-				<p class="commandlabel">Langsamer fahren!</p>
+			<div class="command" command="dataRequest">
+				<p class="commandlabel">Manuelle Datenabfrage</p>
+			</div>
+			<div class="command" command="imageSwap">
+				<p class="commandlabel">Video Bildwechsel</p>
 			</div>
 	</div>
 	<div class="center">
@@ -156,11 +176,11 @@ $(document).ready(function(){
 					</div>
 					<div class="controlelement airtemp" title="Ansaugluft Temperatur">
 						<p class="controllabel target_airtemp">-</p>
-						<p class="controlunit">(°C)</p>
+						<p class="controlunit">(Â°C)</p>
 					</div>
-					<div class="controlelement coolingliq" title="Kühlflüssigkeit Temperatur">
+					<div class="controlelement coolingliq" title="KÃ¼hlflÃ¼ssigkeit Temperatur">
 						<p class="controllabel target_coolingliq">-</p>
-						<p class="controlunit">(°C)</p>
+						<p class="controlunit">(Â°C)</p>
 					</div>
 					<div class="controlelement fuelpress" title="Kraftstoffdruck">
 						<p class="controllabel target_fuelpress">-</p>

@@ -60,6 +60,7 @@ public class UserData implements Serializable{
 				Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
 				String eventType = (String)eventData[1];
 				String eventTime = (String)eventData[2];
+				System.out.println(eventData[3]);
 				double eventLat = (double)eventData[3];
 				double eventLon = (double)eventData[4];
 				//				byte[] eventImage = (byte[]) eventData[5];	// EventImage

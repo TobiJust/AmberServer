@@ -49,9 +49,18 @@
 .car {
 	position: relative;
 	display: inline-block;
+	text-align: center;
 	height: 97%;
-	width: 140px;
+	width: 150px;
 	border: 1px solid #ffcc33;
 	padding-top: 1%;
-	padding-left: 10px; 
+	/*only for testing, overridden by code!*/
+	background: url('../pics/Download.png');
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	background-color: #000000;
+}
+
+.car>p {
+	font-weight: bold;
 }

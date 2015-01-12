@@ -4,9 +4,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.Session;
 
+import de.thwildau.feature.Screenshot;
 import de.thwildau.model.Telemetry;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
+import de.thwildau.webserver.Websocket;
 import de.thwildau.webserver.WebsocketResponse;
 
 /**
@@ -18,7 +20,7 @@ public class VideoStreamer extends Thread {
 
 	private ConcurrentHashMap<Integer, VideoStream> streams = new ConcurrentHashMap<Integer, VideoStream>();
 	private byte[] image;
-	private boolean watch = true;
+	private boolean watch = false;
 	private Session session;
 	private VideoStream videoStream;
 	private WebsocketResponse response;
@@ -71,14 +73,25 @@ public class VideoStreamer extends Thread {
 	}
 	/**
 	 * 
+	 * @param vehicleID
+	 */
+	public void screenshot() {
+		// Set the current stream image as new screenshot image 
+		Screenshot.websocketResponse = this.response;
+	}
+
+	/**
+	 * 
 	 * @param response
 	 */
-	public void setResponseData(WebsocketResponse response) {		
+	public void setResponseData(WebsocketResponse response) {	
 		try {
 			if(response != null && this.session != null){
 				this.response = response;
 				if(watch){
-					this.session.getBasicRemote().sendText(response.toJSON());
+					for(Session s : Websocket.sessions.keySet())
+						s.getAsyncRemote().sendText(response.toJSON());
+					//						s.getBasicRemote().sendText(response.toJSON());
 				}	
 			}
 			if(response != null && Constants.LOG)
@@ -106,11 +119,11 @@ public class VideoStreamer extends Thread {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 		}
 	}
 	private void logData(Telemetry telemetry) {
 		StreamManager.log(telemetry.toString());
 	}
+
 
 }

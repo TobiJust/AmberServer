@@ -79,18 +79,18 @@ public class Vehicle implements Serializable{
 		this.vehicleName = (String)vehicleData[0];
 		ArrayList<Integer> eventIDList = (ArrayList<Integer>) vehicleData[1];
 		this.setImage((byte[]) vehicleData[2]);
-		for(int eventID : eventIDList){
-			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
-			String eventType = (String)eventData[1];
-			String eventTime = (String)eventData[2];
-			double eventLat = (double)eventData[3];
-			double eventLon = (double)eventData[4];
-			byte[] eventImage = (byte[]) eventData[5];	// EventImage
-
-			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage, this.vehicleName);
-			// Add events to the current Vehicle
-			this.getEventList().add(event);
-		}
+//		for(int eventID : eventIDList){
+//			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
+//			String eventType = (String)eventData[1];
+//			String eventTime = (String)eventData[2];
+//			double eventLat = (double)eventData[3];
+//			double eventLon = (double)eventData[4];
+////			byte[] eventImage = (byte[]) eventData[5];	// EventImage
+//
+//			Event event = new Event(eventType, eventTime, eventLat, eventLon, this.vehicleName);
+//			// Add events to the current Vehicle
+//			this.getEventList().add(event);
+//		}
 		this.vehicleID = vehicleID;
 		return this;
 	}

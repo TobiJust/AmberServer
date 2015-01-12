@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 
 import de.thwildau.gcm.SendNotification;
 import de.thwildau.info.OBUMessage;
+import de.thwildau.model.Event;
 import de.thwildau.obu.OBUFrameHandler;
 import de.thwildau.server.AmberServer;
 import de.thwildau.server.AmberServerHandler;
@@ -59,6 +60,9 @@ public class StartAmberServer {
 				case "show user":
 					ServerLogger.log(AmberServer.getDatabase().showAllUser(), Constants.DEBUG);
 					break;
+				case "show vehicles":
+					ServerLogger.log(AmberServer.getDatabase().showAllVehicles(), Constants.DEBUG);
+					break;
 				case "add vehicle":
 					Util.addVehicle();
 					break;
@@ -69,24 +73,29 @@ public class StartAmberServer {
 					Constants.DEBUG = true;
 					break;
 				case "send":
-					new SendNotification("Oil", "Your_Oil", 1, "52.14", "13.37");
+					new SendNotification(new Event("Turn","10012015-223453", 52.13, 13.37, null, "BMW I8"), 5);
 					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "send1":
-					new SendNotification("Temperature", "Your_Temperature", 1, "52.14", "13.37");
+					new SendNotification(new Event("Accelerometer", "10012015-223453", 52.13, 13.37, null, "BMW I8"), 5);
 					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "send2":
-					new SendNotification("Bend", "Bend radius is too small", 5, "52.14", "13.37");
+					new SendNotification(new Event("Turn", "10012015-223453", 52.13, 13.37, null, "BMW I8"), 5);
 					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "send3":
-					new SendNotification("Accident", "Crash", 2, "52.14", "13.37");
+					new SendNotification(new Event("Speed1", "10012015-223453", 52.13, 13.37, null, "BMW I8"), 5);
+					//					new SendNotification("Accident", "Crash", 2, "52.14", "13.37");
 					ServerLogger.log("Send Notification", Constants.DEBUG);
 					break;
 				case "obu":
-					byte[] b = {(byte)0x01};
-					OBUFrameHandler.handlers.get(123).write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
+					if(OBUFrameHandler.handlers.get(5) != null)
+						OBUFrameHandler.handlers.get(5).write(new OBUMessage(OBUMessage.ID_TELEMETRY, OBUMessage.REQUEST_STREAM).request);
+					break;
+				case "swap":
+					if(OBUFrameHandler.handlers.get(5) != null)
+						OBUFrameHandler.handlers.get(5).write(new OBUMessage(OBUMessage.ID_COMMAND, OBUMessage.REQUEST_SWAP).request);
 					break;
 				case "obuDebug":
 					System.out.println("Start OBU Stream");
@@ -111,7 +120,7 @@ public class StartAmberServer {
 						public void run() {
 							while(running){
 								try {
-									orh.addData(Constants.sendData());
+									orh.addData(Constants.sendData(), null);
 								} catch (Exception e) {
 									e.printStackTrace();
 								}

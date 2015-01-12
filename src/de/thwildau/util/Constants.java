@@ -17,6 +17,7 @@ public class Constants {
 	 */
 	public static boolean DEBUG = true;
 	public static boolean LOG = true;
+	public static int LOG_INTERVAL = 1000;
 	/**
 	 * Properties 
 	 */
@@ -42,6 +43,7 @@ public class Constants {
 	public static final String SUCCESS_STREAM_CLOSED = "Stream successful closed";
 	public static final String SUCCESS_LOGOUT = "Logout succeeded";
 	public static final String SUCCESS_ADD_VEHICLE = "Add Vehicle suceeded";
+	public static final String SUCCESS_SCREENSHOT = "Screenshot current stream";
 	/**
 	 * Constant strings to report a failed operation.
 	 */
@@ -55,6 +57,18 @@ public class Constants {
 	public static final String ERROR_ADD_VEHICLE = "Failed to add vehicle";
 	public static final String ERROR_LOGOUT = "Logout failed";
 	public static final String ERROR_UNKNOWN = "Unknown argument given";
+	
+	/**
+	 * Bend events
+	 */
+	public static final String TURN_EVENT 		= "Bend radius is too small";
+	public static final String RPM_EVENT 		= "RPM is too high";
+	public static final String ACC_EVENT 		= "Acceleration is not normal";
+	public static final String SPEED_EVENT 		= "You are over the speed limit";
+	public static final String FUEL_EVENT 		= "Fuel level is low";
+	public static final String COOLANT_EVENT 	= "Coolant Temperature too high";
+	public static final String GYRO_EVENT 		= "Gyro Event";
+	public static final String DEFAULT_EVENT 	= "Default Warning";
 
 	public static final String ARG_GCM_SEND = "send";	
 	public static final String ARG_MESSAGE = "message";

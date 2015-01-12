@@ -1,4 +1,4 @@
-package de.thwildau.stream;
+package de.thwildau.feature;
 
 
 import java.io.IOException;

@@ -58,6 +58,17 @@ amber.ui.openCarPicker = function(){
 	this.closeVideoStream();
 	$('.loginfade, .loginmaterial, .carpickerbody').fadeIn("fast");
 };
+// open dialog to add car to database
+amber.ui.toggleAddCar = function(){
+	console.log("toggled!");
+	if($('.caraddbody').is(':visible')){
+		$('.caraddbody').fadeOut("fast");
+		$('.carpickerbody').fadeIn("fast");
+	} else {
+		$('.carpickerbody').fadeOut();
+		$('.loginfade, .loginmaterial, .caraddbody').fadeIn("fast");
+	}
+};
 // close car picker dialog
 amber.ui.closeCarPicker = function(){
 	$('.loginfade, .loginmaterial, .carpickerbody').fadeOut("fast");
@@ -65,18 +76,33 @@ amber.ui.closeCarPicker = function(){
 // close login screen and switch to carpicker
 amber.ui.closeLogin = function(){
 	$('.loginbody').fadeOut("fast",function(){
+		if($('.caraddbody').is(':visible'))
+			amber.ui.toggleAddCar();
 		$('.carpickerbody').fadeIn("fast");
 	});
 };
+// open command center:
+amber.ui.toggleCommandCenter = function(){
+	if($('.commandbar').is(":visible"))
+		$('.commandbar').fadeOut("fast");
+	else
+		$('.commandbar').fadeIn("fast");
+};
 // open login dialog after logout
 amber.ui.openLogin = function(s){
-	$('.carpickerbody').fadeOut();
+	$('.carpickerbody, .caraddbody').fadeOut();
 	this.FX.lightsOFF();
 	$('.loginfade, .loginmaterial, .loginbody').fadeIn("fast");
 };
 // append a notification to the notification center
 amber.ui.appendNotification = function(data){
-	$('#noticontainer').append('<li class="notification">'+data+'</li>');
+	var noti = '<li class="notification">';
+		noti+= '<ul class="notiproperties">';
+		noti+= '<li>Typ: '+data.eventType+'</li>';
+		noti+= '<li>Lat: '+data.latitude+'</li>';
+		noti+= '<li>Long: '+data.longitude+'</li>';
+		noti+= '</ul></li>';
+	$('#noticontainer').append(noti);
 };
 // append cars to car picker dialog (data is considered a list)
 amber.ui.appendCars = function(data){
@@ -89,10 +115,13 @@ amber.ui.appendCars = function(data){
 		var car = data[l];
 		var imgUrl = "data:image/png;base64,"+car.image;
 		var element = '<li class="car"'
+					 +'style="background: url('+imgUrl+');'
+					 +       'background-repeat: no-repeat;'
+					 +       'background-position: 50% 50%;'
+					 +       'background-color: #000000;"'
 					 +'carname="'+car.vehicleName+'"'
 					 +'carid="'+car.vehicleID+'">';
 		element += '<p>'+car.vehicleName+'</p>';
-		element += '<img src="'+imgUrl+'">';
 		element += '</li>';
 		// push the new elements string representative in a list
 		concat.push(element);
@@ -107,6 +136,19 @@ amber.ui.appendCars = function(data){
 amber.ui.carPicked = function(element){
 	// set the current car id as integer (attributes can only hold strings!)
 	amber.carID = parseInt(element.attr('carid'));
+	// append cars former events to notification center
+	$('#noticontainer').empty();
+	for(var c = 0; c < amber.cars.carList.length; c++){
+		// find the car in the carlist:
+		if(amber.cars.carList[c].vehicleID = amber.carID){
+			// push all notifications into the array
+			amber.cars.carList[c].eventList.forEach(function(noti){
+				amber.ui.appendNotification(noti);
+			});
+			// stop loop if car was found
+			break;
+		}
+	}
 	// start data streaming from the picked car
 	amber.net.startDataStream();
 	// reset old route viewed in the map 
@@ -115,27 +157,50 @@ amber.ui.carPicked = function(element){
 	this.closeCarPicker();
 	this.FX.lightsON();
 };
+// enable video download button: 
+amber.ui.toggleDownloadBtn = function(){
+	if($('#btndownload').is(":visible"))
+		$('#btndownload').fadeOut("fast");
+	else
+		$('#btndownload').fadeIn("fast");
+};
+//enable download of screenshot:
+amber.ui.toggleDownloadBtnScreen = function(){
+	if($('#btndownloadscreen').is(":visible"))
+		$('#btndownloadscreen').fadeOut("fast");
+	else
+		$('#btndownloadscreen').fadeIn("fast");
+};
+// pick a command:
+amber.ui.commandPicked = function(){
+	// close command center
+	this.toggleCommandCenter();
+};
 // set ambers armature labels, represented by css-classes
 amber.ui.setArmatures = function(data){
 	$('.target_kmall').text(data.kmAtAll);
 	$('.target_km').text(data.km);
 	$('.target_airflow').text(data.airFlow);
 	$('.target_airpress').text(data.airPressure);
-	$('.target_airtemp').text(data.airPressure);
+	$('.target_airtemp').text(data.airTemp);
 	$('.target_coolingliq').text(data.coolingLiqTemp);
 	$('.target_fuelpress').text(data.fuelPressure);
 	$('.target_eviropress').text(data.enviroPressure);
-	$('.drivetarget').text(data.drive);
+	$('.drivetarget').text(data.revolutions);
 	$('.tachotarget').text(data.speed);
 	var gas = data.fuel+"%";
-	var load = data.engineLoad+"%";
+	var load = parseInt(data.engineLoad)+"%";
 	$('.fuelin').css('width',gas);
-	if(data.engineLoad && data.engineLoad > 0)
+	if(data.engineLoad && data.engineLoad > 0){
 		$('.motorload').css('width',load)
-					   .css('box-shadow','0 -11px 61px 48px #ffcc33')
-					   .text(load);
-	else
+					   .css('box-shadow','0 -11px 61px 48px #ffcc33');
+	$('.motorload_label').text(load);
+	} else
 		$('.motorload').css('box-shadow','none').css('width','0');
+};
+// retrieve new cars id from input field
+amber.ui.getNewCarID = function(){
+	return parseInt($('.loginfield[type="obuid"]').val());
 };
 // retrieve logindata from login dialog
 amber.ui.getLoginData = function(){
@@ -217,7 +282,7 @@ amber.ui.FX.lightsOFF = function(){
 // blinking record symbol due video stream recording
 amber.ui.FX.recordingON = function(){
 	if(amber.media.recording){
-		$('#btnrecord').fadeTo('slow', 0.1).fadeTo('slow', 1.0);
+		$('#btnrecord').fadeTo('fast', 0.1).fadeTo('fast', 1.0);
 		setTimeout(function(){
 			amber.ui.FX.recordingON();
 		},500);

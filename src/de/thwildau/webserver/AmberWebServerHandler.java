@@ -28,6 +28,8 @@ public class AmberWebServerHandler extends AbstractHandler{
 			switch(requestIdent){
 			case "download":
 				break;
+			case "screenshot":
+				break;
 			case "websocket":
 				break;
 			default:

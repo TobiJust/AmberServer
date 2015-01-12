@@ -13,6 +13,7 @@ import org.json.simple.JSONObject;
 
 import de.thwildau.info.OBUMessage;
 import de.thwildau.model.UserData;
+import de.thwildau.model.Vehicle;
 import de.thwildau.obu.OBUFrameHandler;
 import de.thwildau.server.AmberServer;
 import de.thwildau.stream.StreamManager;
@@ -24,7 +25,7 @@ import de.thwildau.util.Util;
 @ServerEndpoint("/websocket/")
 public class Websocket {
 
-	private ConcurrentHashMap<Session, Integer> sessions = new ConcurrentHashMap<Session, Integer>();
+	public static ConcurrentHashMap<Session, Integer> sessions = new ConcurrentHashMap<Session, Integer>();
 
 	/**
 	 * 
@@ -49,9 +50,13 @@ public class Websocket {
 					Object[] streamContent = WebsocketHandler.parseStreamRequest((JSONObject) request[1]);
 					int vehicleID = (int)streamContent[0];
 					int userID = (int) streamContent[1];
-					VideoStreamer streamer =  new VideoStreamer();
-					StreamManager.addStream(vehicleID, streamer);
-					StreamManager.getStream(vehicleID).startStream(session);
+					VideoStreamer streamer = StreamManager.getStream(vehicleID);
+					if(streamer == null){
+						streamer = new VideoStreamer();
+						StreamManager.addStream(vehicleID, streamer);
+					}
+					sessions.put(session, userID);
+					streamer.startStream(session);
 					responseMessage = new WebsocketResponse(WebsocketResponse.STREAM_STARTED, Constants.SUCCESS_STREAM_STARTED).toJSON();		
 					break;
 				case "stopStream":
@@ -81,7 +86,7 @@ public class Websocket {
 					if(streamer != null)
 						streamer.stopRecord(vehicleID);
 					responseMessage = new WebsocketResponse(WebsocketResponse.STOP_RECORD, Constants.SUCCESS_STREAM_CLOSED).toJSON();
-//					Thread.sleep(100);
+					//					Thread.sleep(100);
 					session.getAsyncRemote().sendText(responseMessage);	
 					break;
 				case "requestLogin":
@@ -105,10 +110,8 @@ public class Websocket {
 						UserData response = new UserData();
 						response = response.prepareAdminData(user_id);
 						responseMessage = new WebsocketResponse(WebsocketResponse.LOGIN, response).toJSON();
-						sessions.put(session, user_id);
 						ServerLogger.log("Web App Login success: " + usernameLogin, Constants.DEBUG);
 					}
-					System.out.println(responseMessage);
 					session.getAsyncRemote().sendText(responseMessage);
 					break;
 				case "requestLogout":
@@ -118,26 +121,65 @@ public class Websocket {
 					session.getAsyncRemote().sendText(responseMessage);
 					break;
 				case "requestCars":
-					int[] carsContent = WebsocketHandler.parseCarsRequest((JSONObject) request[1]);
-					StreamManager.getStream(carsContent[0]);
+					user_id = Util.safeLongToInt((long)request[1]);
+					UserData response = new UserData();
+					response = response.prepareUserData(user_id);
+					responseMessage = new WebsocketResponse(WebsocketResponse.CARS_RESPONSE, response).toJSON();
+					System.out.println(responseMessage);
+					session.getAsyncRemote().sendText(responseMessage);
+					ServerLogger.log("Return list of cars: " + user_id, Constants.DEBUG);
 					break;
 				case "sendCommand":
 					Object[] commandContent = WebsocketHandler.parseCommandRequest((JSONObject)request[1]);
-					int obuID = (int)commandContent[0];
-					String command = (String)commandContent[1];
-					IoSession obuSession = OBUFrameHandler.handlers.get(obuID);
-					switch(command){
-					case "imageSwap":
-						byte[] b = {(byte)0x01};
-						obuSession.write(new OBUMessage(OBUMessage.REQUEST_PICTURE, b).request);
-						break;
-					case "dataRequest":				
-						//				obuSession.write(new OBUMessage(OBUMessage.REQUEST_DATA, content).request);
-						break;
-					default:
-						//				obuSession.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, ).request);
-						break;
+					String command = (String)commandContent[0];
+//					int obuID = (int)commandContent[1];
+					//					IoSession obuSession = OBUFrameHandler.handlers.get(obuID);
+					IoSession obuSession = OBUFrameHandler.handlers.get(5);
+					if(obuSession != null)
+						switch(command){
+						case "imageSwap":
+							obuSession.write(new OBUMessage(OBUMessage.ID_COMMAND, OBUMessage.REQUEST_SWAP).request);
+							System.out.println("WRITE IMAGE SWAP");
+							System.out.println("WRITE IMAGE SWAP");
+							System.out.println("WRITE IMAGE SWAP");
+							break;
+						case "dataRequest":				
+							obuSession.write(new OBUMessage(OBUMessage.ID_COMMAND, OBUMessage.REQUEST_DATA).request);
+							break;
+						default:
+							break;
+						}
+					break;
+				case "addCar":
+					Object[] carContent = WebsocketHandler.parseRecordRequest((JSONObject) request[1]);
+					vehicleID = (int)carContent[0];
+					userID = (int) carContent[1];
+
+					Vehicle vehicle = AmberServer.getDatabase().registerVehicle(userID, vehicleID);
+					if(vehicle == null){
+						responseMessage = new WebsocketResponse(WebsocketResponse.ERROR, Constants.ERROR_REGISTER_VEHICLE).toJSON();
+						ServerLogger.log("Add Vehicle failed: " + userID, Constants.DEBUG);
 					}
+					// Add Vehicle succeeded
+					else{
+						vehicle = vehicle.prepareVehicle(vehicleID);
+						responseMessage = new WebsocketResponse(WebsocketResponse.REGISTER_VEHICLE, Constants.SUCCESS_REGISTER_VEHICLE).toJSON();
+						ServerLogger.log("Add Vehicle succeeded: " + userID, Constants.DEBUG);				
+					}
+					session.getAsyncRemote().sendText(responseMessage);	
+					break;
+				case "requestScreenshot":
+					recordContent = WebsocketHandler.parseRecordRequest((JSONObject) request[1]);
+					vehicleID = (int) recordContent[0];
+					userID = (int) recordContent[1];
+
+					streamer = StreamManager.getStream(vehicleID);
+					if(streamer != null)
+						streamer.screenshot();
+
+					responseMessage = new WebsocketResponse(WebsocketResponse.SCREENSHOT, Constants.SUCCESS_SCREENSHOT).toJSON();
+					System.out.println(responseMessage);
+					session.getAsyncRemote().sendText(responseMessage);	
 					break;
 				default:
 					break;

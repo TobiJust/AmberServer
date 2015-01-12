@@ -35,6 +35,9 @@ public class AmberServerHandler extends IoHandlerAdapter
 	private ConcurrentHashMap<Integer, TimerTask> timers = new ConcurrentHashMap<Integer, TimerTask>();
 	private TimerTask task;
 
+	// Check for incoming Message from OBU or Application
+	ClientMessage receivedClientMessage = null;
+
 	private Timer timer = new Timer();
 
 	public static AmberServerHandler getInstance(){
@@ -48,15 +51,6 @@ public class AmberServerHandler extends IoHandlerAdapter
 	public void sessionCreated(IoSession session) {
 		ServerLogger.log("Session created..." + session, Constants.DEBUG);
 		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 5);
-
-//		try {
-//			Thread.sleep(2000);
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-		byte[] b = {(byte)0x01};
-		session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-		OBUFrameHandler.obuHandlers.put(session, new OBUFrameHandler());
 	}
 
 	public void sessionClosed(IoSession session) throws Exception {
@@ -80,15 +74,13 @@ public class AmberServerHandler extends IoHandlerAdapter
 	@Override
 	public void messageReceived( IoSession session, Object message ) throws Exception
 	{
-		System.out.println("data " + (byte[])message);
-		for(byte b : (byte[])message){
-			System.out.print(b + " ");
-		}
-		System.out.println();
+		//		System.out.println("data " + (byte[])message);
+		//		for(byte b : (byte[])message){
+		//			System.out.print(b + " ");
+		//		}
+		//		System.out.println();
 
-		
-		// Check for incoming Message from OBU or Application
-		ClientMessage receivedClientMessage = null;
+
 
 		if(message instanceof ClientMessage)		// Application
 			receivedClientMessage = (ClientMessage) message;
@@ -105,158 +97,167 @@ public class AmberServerHandler extends IoHandlerAdapter
 			return;
 		}
 
-		switch(receivedClientMessage.getId()){
-		case LOGIN_CHECK:
-			try{
-				//				lock.lock();
-				int user_id = (int)receivedClientMessage.getContent();
-				UserData response = null;
-				if(user_id == -1){
-					session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
+		Runnable run = new Runnable() {
+			@Override
+			public void run() {
+				switch(receivedClientMessage.getId()){
+				case LOGIN_CHECK:
+					try{
+						//				lock.lock();
+						int user_id = (int)receivedClientMessage.getContent();
+						UserData response = null;
+						if(user_id == -1){
+							session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
+							break;
+						}
+						boolean isOnline = AmberServer.getDatabase().checkOnline(user_id);
+						if(isOnline){
+							session.setAttribute("user", user_id);
+							cancelTimeout(user_id);
+							response = new UserData().prepareUserData(user_id);
+							session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
+							ServerLogger.log("Login succeeded: " + user_id, Constants.DEBUG);
+						}
+						else
+							session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
+					}
+					finally{
+						//				lock.unlock();
+					}
+					break;
+				case LOGIN:
+					ClientMessage responseMessage = null;
+					String usernameLogin = ((User)receivedClientMessage.getContent()).getName();
+					byte[] passLogin = ((User)receivedClientMessage.getContent()).getPass();
+					String regID = ((User)receivedClientMessage.getContent()).getRegistationID();
+					// Database validation
+					// Check for User and Password
+					int userID = AmberServer.getDatabase().login(usernameLogin, passLogin);
+					if(userID == -1){
+						responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_LOGIN);
+						ServerLogger.log("Login failed: " + usernameLogin, Constants.DEBUG);
+					}
+					// Check for GCM Registration
+					else{
+						AmberServer.getDatabase().registerGCM(userID, regID);
+						UserData response = new UserData();
+						response = response.prepareUserData(userID);
+						responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);
+						session.setAttribute("user", userID);
+						ServerLogger.log("Login success: " + usernameLogin, Constants.DEBUG);
+					}
+					session.write(responseMessage);
+					break;
+				case LOGOUT:
+					int user_id = (int)receivedClientMessage.getContent();
+					AmberServer.getDatabase().logout(user_id);
+					responseMessage = new ClientMessage(ClientMessage.Ident.LOGOUT, Constants.SUCCESS_LOGOUT);
+					session.write(responseMessage);
+					break;
+				case REGISTER:
+					String usernameRegister = ((User)receivedClientMessage.getContent()).getName();
+					byte[] passRegister = ((User)receivedClientMessage.getContent()).getPass();
+					boolean queryRegister = AmberServer.getDatabase().addUser(usernameRegister, passRegister, 0);
+					// Registration failed
+					if(!queryRegister){
+						responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER);
+						ServerLogger.log("Registration failed: " + usernameRegister, Constants.DEBUG);
+					}
+					// Registration succeeded
+					else{
+						responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER, Constants.SUCCESS_REGISTER);
+						ServerLogger.log("Registration success: " + usernameRegister, Constants.DEBUG);				
+					}
+					session.write(responseMessage);
+					break;
+				case EVENT_DETAIL:
+				case EVENT_REQUEST:
+					Object[] request = (Object[]) receivedClientMessage.getContent();
+					int eventID = (int) request[0];
+					int obuID = (int) request[1];
+					Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
+					String vehicleName = AmberServer.getDatabase().getVehicleName(obuID);
+					String eventType = (String)eventData[1];
+					String eventTime = (String)eventData[2];
+					double eventLat = (double)eventData[3];
+					double eventLon = (double)eventData[4];
+					byte[] eventImage = (byte[]) eventData[5];	// EventImage
+					Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage, vehicleName);
+					event.setVehicleID(obuID);
+					session.write(new ClientMessage(receivedClientMessage.getId(), event));
+					break;
+				case REGISTER_VEHICLE:
+					request = (Object[]) receivedClientMessage.getContent();
+					userID = (int) request[0];
+					int vehicleID = (int) request[1];
+
+					System.out.println("VEHICLE ID " + vehicleID);
+
+					Vehicle vehicle = AmberServer.getDatabase().registerVehicle(userID, vehicleID);
+					System.out.println(vehicle);
+					if(vehicle == null){
+						responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER_VEHICLE);
+						ServerLogger.log("Add Vehicle failed: " + userID, Constants.DEBUG);
+					}
+					// Add Vehicle succeeded
+					else{
+						vehicle = vehicle.prepareVehicle(vehicleID);
+						responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER_VEHICLE, vehicle);
+						ServerLogger.log("Add Vehicle succeeded: " + userID, Constants.DEBUG);				
+					}
+					session.write(responseMessage);
+					break;
+				case UNREGISTER_VEHICLE:
+					request = (Object[]) receivedClientMessage.getContent();
+					userID = (int) request[0];
+					vehicleID = (int) request[1];
+					int position = (int) request[2];
+					boolean queryUnregisterVehicle = AmberServer.getDatabase().unregisterVehicle(userID, vehicleID);
+					if(!queryUnregisterVehicle){
+						responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, -1);
+						ServerLogger.log("Unregister Vehicle failed for User: " + userID, Constants.DEBUG);
+					}
+					// Unregister Vehicle succeeded
+					else{
+						responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, position);
+						ServerLogger.log("Unregister Vehicle succeeded for User: " + userID, Constants.DEBUG);				
+					}
+					session.write(responseMessage);
+					break;
+				case TOGGLE_ALARM:
+					request = (Object[]) receivedClientMessage.getContent();
+					userID = (int) request[0];
+					vehicleID = (int) request[1];
+					boolean status = (boolean) request[2];
+					position = (int) request[3];
+					boolean queryToggleAlarm = AmberServer.getDatabase().toggleAlarm(userID, vehicleID, status);
+					Object[] responseData = {queryToggleAlarm, position};
+					responseMessage = new ClientMessage(ClientMessage.Ident.TOGGLE_ALARM, responseData);
+					ServerLogger.log("Toggle Alarm for User: " + userID + " " + queryToggleAlarm, Constants.DEBUG);	
+					session.write(responseMessage);
+					break;
+				case GET_EVENTLIST_BACKPRESS:
+				case GET_EVENTLIST:
+					vehicleID = (int) receivedClientMessage.getContent();
+					vehicleName = AmberServer.getDatabase().getVehicleName(vehicleID);
+					ArrayList<Event> events = Vehicle.prepareEventList(vehicleID);
+					Object[] eventResponse = {events, vehicleName};
+					responseMessage = new ClientMessage(receivedClientMessage.getId(), eventResponse);
+					session.write(responseMessage);
+					break;
+				case GET_VEHICLELIST_BACKPRESS:
+					userID = (int) receivedClientMessage.getContent();
+					UserData response = new UserData();
+					response = response.prepareUserData(userID);
+					responseMessage = new ClientMessage(ClientMessage.Ident.GET_VEHICLELIST_BACKPRESS, response.getVehicles());
+					session.write(responseMessage);
+					break;
+				default:
 					break;
 				}
-				boolean isOnline = AmberServer.getDatabase().checkOnline(user_id);
-				if(isOnline){
-					session.setAttribute("user", user_id);
-					cancelTimeout(user_id);
-					response = new UserData().prepareUserData(user_id);
-					session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
-					ServerLogger.log("Login succeeded: " + user_id, Constants.DEBUG);
-				}
-				else
-					session.write(new ClientMessage(ClientMessage.Ident.LOGIN_CHECK, response));
 			}
-			finally{
-				//				lock.unlock();
-			}
-			break;
-		case LOGIN:
-			ClientMessage responseMessage = null;
-			String usernameLogin = ((User)receivedClientMessage.getContent()).getName();
-			byte[] passLogin = ((User)receivedClientMessage.getContent()).getPass();
-			String regID = ((User)receivedClientMessage.getContent()).getRegistationID();
-			// Database validation
-			// Check for User and Password
-			int userID = AmberServer.getDatabase().login(usernameLogin, passLogin);
-			if(userID == -1){
-				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_LOGIN);
-				ServerLogger.log("Login failed: " + usernameLogin, Constants.DEBUG);
-			}
-			// Check for GCM Registration
-			else{
-				AmberServer.getDatabase().registerGCM(userID, regID);
-				UserData response = new UserData();
-				response = response.prepareUserData(userID);
-				responseMessage = new ClientMessage(ClientMessage.Ident.LOGIN, response);
-				session.setAttribute("user", userID);
-				ServerLogger.log("Login success: " + usernameLogin, Constants.DEBUG);
-			}
-			session.write(responseMessage);
-			break;
-		case LOGOUT:
-			int user_id = (int)receivedClientMessage.getContent();
-			AmberServer.getDatabase().logout(user_id);
-			responseMessage = new ClientMessage(ClientMessage.Ident.LOGOUT, Constants.SUCCESS_LOGOUT);
-			session.write(responseMessage);
-			break;
-		case REGISTER:
-			String usernameRegister = ((User)receivedClientMessage.getContent()).getName();
-			byte[] passRegister = ((User)receivedClientMessage.getContent()).getPass();
-			boolean queryRegister = AmberServer.getDatabase().addUser(usernameRegister, passRegister, 0);
-			// Registration failed
-			if(!queryRegister){
-				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER);
-				ServerLogger.log("Registration failed: " + usernameRegister, Constants.DEBUG);
-			}
-			// Registration succeeded
-			else{
-				responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER, Constants.SUCCESS_REGISTER);
-				ServerLogger.log("Registration success: " + usernameRegister, Constants.DEBUG);				
-			}
-			session.write(responseMessage);
-			break;
-		case EVENT_DETAIL:
-		case EVENT_REQUEST:
-			Object[] request = (Object[]) receivedClientMessage.getContent();
-			int eventID = (int) request[0];
-			int obuID = (int) request[1];
-			Object[] eventData = AmberServer.getDatabase().getEventData(eventID);
-			String vehicleName = AmberServer.getDatabase().getVehicleName(obuID);
-			String eventType = (String)eventData[1];
-			String eventTime = (String)eventData[2];
-			double eventLat = (double)eventData[3];
-			double eventLon = (double)eventData[4];
-			byte[] eventImage = (byte[]) eventData[5];	// EventImage
-			Event event = new Event(eventType, eventTime, eventLat, eventLon, eventImage, vehicleName);
-			event.setVehicleID(obuID);
-			session.write(new ClientMessage(receivedClientMessage.getId(), event));
-			break;
-		case REGISTER_VEHICLE:
-			request = (Object[]) receivedClientMessage.getContent();
-			userID = (int) request[0];
-			int vehicleID = (int) request[1];
-
-			Vehicle vehicle = AmberServer.getDatabase().registerVehicle(userID, vehicleID);
-			if(vehicle == null){
-				responseMessage = new ClientMessage(ClientMessage.Ident.ERROR, Constants.ERROR_REGISTER_VEHICLE);
-				ServerLogger.log("Add Vehicle failed: " + userID, Constants.DEBUG);
-			}
-			// Add Vehicle succeeded
-			else{
-				vehicle = vehicle.prepareVehicle(vehicleID);
-				responseMessage = new ClientMessage(ClientMessage.Ident.REGISTER_VEHICLE, vehicle);
-				ServerLogger.log("Add Vehicle succeeded: " + userID, Constants.DEBUG);				
-			}
-			session.write(responseMessage);
-			break;
-		case UNREGISTER_VEHICLE:
-			request = (Object[]) receivedClientMessage.getContent();
-			userID = (int) request[0];
-			vehicleID = (int) request[1];
-			int position = (int) request[2];
-			boolean queryUnregisterVehicle = AmberServer.getDatabase().unregisterVehicle(userID, vehicleID);
-			if(!queryUnregisterVehicle){
-				responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, -1);
-				ServerLogger.log("Unregister Vehicle failed for User: " + userID, Constants.DEBUG);
-			}
-			// Unregister Vehicle succeeded
-			else{
-				responseMessage = new ClientMessage(ClientMessage.Ident.UNREGISTER_VEHICLE, position);
-				ServerLogger.log("Unregister Vehicle succeeded for User: " + userID, Constants.DEBUG);				
-			}
-			session.write(responseMessage);
-			break;
-		case TOGGLE_ALARM:
-			request = (Object[]) receivedClientMessage.getContent();
-			userID = (int) request[0];
-			vehicleID = (int) request[1];
-			boolean status = (boolean) request[2];
-			position = (int) request[3];
-			boolean queryToggleAlarm = AmberServer.getDatabase().toggleAlarm(userID, vehicleID, status);
-			Object[] responseData = {queryToggleAlarm, position};
-			responseMessage = new ClientMessage(ClientMessage.Ident.TOGGLE_ALARM, responseData);
-			ServerLogger.log("Toggle Alarm for User: " + userID + " " + queryToggleAlarm, Constants.DEBUG);	
-			session.write(responseMessage);
-			break;
-		case GET_EVENTLIST_BACKPRESS:
-		case GET_EVENTLIST:
-			vehicleID = (int) receivedClientMessage.getContent();
-			vehicleName = AmberServer.getDatabase().getVehicleName(vehicleID);
-			ArrayList<Event> events = Vehicle.prepareEventList(vehicleID);
-			Object[] eventResponse = {events, vehicleName};
-			responseMessage = new ClientMessage(receivedClientMessage.getId(), eventResponse);
-			session.write(responseMessage);
-			break;
-		case GET_VEHICLELIST_BACKPRESS:
-			userID = (int) receivedClientMessage.getContent();
-			UserData response = new UserData();
-			response = response.prepareUserData(userID);
-			responseMessage = new ClientMessage(ClientMessage.Ident.GET_VEHICLELIST_BACKPRESS, response.getVehicles());
-			session.write(responseMessage);
-			break;
-		default:
-			break;
-		}
+		};
+		new Thread(run).start();
 	}
 	@Override
 	public void sessionIdle( IoSession session, IdleStatus status ) throws Exception
@@ -282,52 +283,29 @@ public class AmberServerHandler extends IoHandlerAdapter
 	}
 
 	private void interpretData(byte[] data, IoSession session) {
-		//		FrameObject frame = new FrameObject();
-		//		frame.append(data, 0);
+		if(task != null)
+			task.cancel();
 		try {
-			//			if(frame.getMessageID() == FrameObject.DEVICE){
-			//				OBUResponseHandler.handlers.put(frame.getDeviceID(), session);
-			//				obuHandlers.put(session, new OBUResponseHandler());
-			//			}
-			//			else{
 			if(OBUFrameHandler.obuHandlers.get(session) == null)
 				OBUFrameHandler.obuHandlers.put(session, new OBUFrameHandler());
 
-			long current = 0;
-			long now = 0;
-			boolean transactionState = OBUFrameHandler.obuHandlers.get(session).addData(data);
+			boolean transactionState = OBUFrameHandler.obuHandlers.get(session).addData(data, session);
 			if(transactionState){
-				byte[] b = {(byte)0x01};
-				session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-				
-				current = System.currentTimeMillis();
-				
-				
-				//				if(task != null)
-				//					task.cancel();
-				//				task = null;
-			}
-			else{
-				System.out.println("ASDASD");				
-				
-//				while((now = System.currentTimeMillis()) > current + 200){
-//					System.out.println("New Request");
-//					byte[] b = {(byte)0x01};
-//					session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-//				};
-				
-				//				task = new TimerTask() {			
-				//					@Override
-				//					public void run() {
-				//						System.out.println("new Request " + Math.random());
-				//						byte[] b = {(byte)0x01};
-				//						session.write(new OBUMessage(OBUMessage.REQUEST_TELEMETRY, b).request);
-				//					}
-				//				};
-				//				timer.schedule(task, 1000);
+				session.write(new OBUMessage(OBUMessage.ID_TELEMETRY, OBUMessage.REQUEST_STREAM).request);
 
-			}
-			//		}
+				System.out.println("ADASDASDASDASDASD");
+				System.out.println("ADASDASDASDASDASD");
+				System.out.println("ADASDASDASDASDASD");
+
+				task = new TimerTask() {			
+					@Override
+					public void run() {
+						System.out.println("new request");
+						session.write(new OBUMessage(OBUMessage.ID_TELEMETRY, OBUMessage.REQUEST_STREAM).request);
+					}
+				};
+				timer.schedule(task, 2000);
+			}	
 
 		} catch (Exception e) {
 			e.printStackTrace();

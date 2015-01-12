@@ -13,7 +13,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 
 import de.thwildau.database.DatabaseManager;
-import de.thwildau.stream.VideoDownload;
+import de.thwildau.feature.Screenshot;
+import de.thwildau.feature.VideoDownload;
 import de.thwildau.util.Constants;
 import de.thwildau.util.ServerLogger;
 import de.thwildau.util.ServerPreferences;
@@ -37,6 +38,7 @@ public class AmberWebServer{
 			ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 			context.setContextPath("/");
 			context.addServlet(new ServletHolder(new VideoDownload()),"/download");
+			context.addServlet(new ServletHolder(new Screenshot()),"/screenshot");
 
 			// Add website resources to web server
 			ResourceHandler resource_handler = new ResourceHandler();

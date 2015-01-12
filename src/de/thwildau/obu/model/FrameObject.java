@@ -7,7 +7,11 @@ public class FrameObject {
 
 	protected static final int PAYLOAD_L = 4;
 	protected static final int PAYLOAD_H = 3;
-	public static final byte DEVICE = 9;
+
+	public static final byte ACK 		= 1;
+	public static final byte STREAM 	= 3;
+	public static final byte EVENT 		= 4;
+	
 	private ArrayList<Byte> frame;
 
 	public FrameObject(){

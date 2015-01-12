@@ -3,6 +3,8 @@ package de.thwildau.model;
 import java.util.HashMap;
 import java.util.List;
 
+import de.thwildau.util.Util;
+
 public class Telemetry {
 
 	/*
@@ -28,36 +30,36 @@ public class Telemetry {
 	#define FIELD_TYPE_OBD_ENG_KM       0x12
 	 */
 
-	private final byte POS_N 		= 0x00;
-	private final byte POS_E 		= 0x01;
-	private final byte POS_H		= 0x02;
-	private final byte ACC_X 		= 0x03;
-	private final byte ACC_Y 		= 0x04;
-	private final byte ACC_Z 		= 0x05;
-	private final byte GYRO_X 		= 0x06;
-	private final byte GYRO_Y 		= 0x07;
-	private final byte GYRO_Z 		= 0x08;
-	private final byte SPEED  		= 0x09;
-	private final byte RPM   		= 0x0A;
-	private final byte ENG_LOAD 	= 0x0B;
-	private final byte COOL_TEMP 	= 0x0C;
-	private final byte AIR_FLOW 	= 0x0D;
-	private final byte INLET_PRESS 	= 0x0E;
-	private final byte INLET_TEMP 	= 0x0F;
-	private final byte FUEL_LVL 	= 0x10;
-	private final byte FUEL_PRESS 	= 0x11;
-	private final byte ENG_KM 		= 0x12;
+	private static final byte POS_N 		= 0x00;
+	private static final byte POS_E 		= 0x01;
+	private static final byte POS_H			= 0x02;
+	private static final byte ACC_X 		= 0x03;
+	private static final byte ACC_Y 		= 0x04;
+	private static final byte ACC_Z 		= 0x05;
+	private static final byte GYRO_X 		= 0x06;
+	private static final byte GYRO_Y 		= 0x07;
+	private static final byte GYRO_Z 		= 0x08;
+	private static final byte SPEED  		= 0x09;
+	private static final byte RPM   		= 0x0A;
+	private static final byte ENG_LOAD 		= 0x0B;
+	private static final byte COOL_TEMP 	= 0x0C;
+	private static final byte AIR_FLOW 		= 0x0D;
+	private static final byte INLET_PRESS 	= 0x0E;
+	private static final byte INLET_TEMP 	= 0x0F;
+	private static final byte FUEL_LVL 		= 0x10;
+	private static final byte FUEL_PRESS 	= 0x11;
+	private static final byte ENG_KM 		= 0x12;
 
 	// ...
 
-	private String fuel 			= "";
-	private String speed 			= "";
-	private String revolutions 		= "";
-	private String gyro_x 			= "";
-	private String gyro_y 			= "";
-	private String gyro_z 			= "";
-	private double lat 				= 0.0;
-	private double lon 				= 0.0;
+	private String fuel 			= "30";
+	private String speed 			= "0";
+	private String revolutions 		= "0";
+	private String gyro_x 			= "0";
+	private String gyro_y 			= "0";
+	private String gyro_z 			= "0";
+	private double lat 				= 52.13;
+	private double lon 				= 13.37;
 	private String drive 			= "";
 	private String airFlow 			= "";
 	private String airPressure 		= "";
@@ -66,8 +68,11 @@ public class Telemetry {
 	private String fuelPressure 	= "";
 	private String enviroPressure 	= "";
 	private String kmAtAll 			= "";
-	private String km 				= "";
+	private String km 				= "0";
 	private String engineLoad 		= "";
+	private String acceleration_x	= "";
+	private String acceleration_y	= "";
+	private String acceleration_z	= "";
 
 	public Telemetry(){
 
@@ -77,37 +82,59 @@ public class Telemetry {
 		for(byte b : data.keySet()){
 			switch(b){
 			case SPEED:
-				this.speed = bytesToStringUTFCustom(data.get(b));
+				this.speed = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case FUEL_LVL:
-				this.fuel = bytesToStringUTFCustom(data.get(b));
+				this.fuel = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case RPM:
-				this.revolutions = bytesToStringUTFCustom(data.get(b));
+				this.revolutions = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case FUEL_PRESS:
-				this.airPressure = bytesToStringUTFCustom(data.get(b));
+				this.fuelPressure = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case POS_N:
-				this.lat = parseCoordinates(bytesToStringUTFCustom(data.get(b)));
+				if(parseCoordinates(Util.bytesToStringUTFCustom(data.get(b))) > 0.0)
+					this.lat = parseCoordinates(Util.bytesToStringUTFCustom(data.get(b)));
+				System.out.println("THIS:LAT " + this.lat);
 				break;
 			case POS_E:
-				this.lon = parseCoordinates(bytesToStringUTFCustom(data.get(b)));
+				if(parseCoordinates(Util.bytesToStringUTFCustom(data.get(b))) > 0.0)
+					this.lon = parseCoordinates(Util.bytesToStringUTFCustom(data.get(b)));
+				System.out.println("THIS:LON " + this.lon);
 				break;
 			case ENG_KM:
-				this.km = bytesToStringUTFCustom(data.get(b));
+				this.km = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case GYRO_X:
-				this.gyro_x = bytesToStringUTFCustom(data.get(b));
+				this.gyro_x = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case GYRO_Y:
-				this.gyro_y = bytesToStringUTFCustom(data.get(b));
+				this.gyro_y = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case GYRO_Z:
-				this.gyro_z = bytesToStringUTFCustom(data.get(b));
+				this.gyro_z = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			case ENG_LOAD:
-				this.engineLoad = bytesToStringUTFCustom(data.get(b));
+				this.engineLoad = Util.bytesToStringUTFCustom(data.get(b));
+				break;
+			case AIR_FLOW:
+				this.airFlow = Util.bytesToStringUTFCustom(data.get(b));
+				break;
+			case COOL_TEMP:
+				this.coolingLiqTemp = Util.bytesToStringUTFCustom(data.get(b));
+				break;
+			case INLET_PRESS:
+				this.airPressure = Util.bytesToStringUTFCustom(data.get(b));
+				break;
+			case ACC_X:
+				this.acceleration_x = Util.bytesToStringUTFCustom(data.get(b));
+				break;
+			case ACC_Y:
+				this.acceleration_y = Util.bytesToStringUTFCustom(data.get(b));
+				break;
+			case ACC_Z:
+				this.acceleration_z = Util.bytesToStringUTFCustom(data.get(b));
 				break;
 			default:
 				break;
@@ -258,18 +285,32 @@ public class Telemetry {
 		this.gyro_z = gyro_z;
 	}
 
+	public String getAcceleration_x() {
+		return acceleration_x;
+	}
 
-	public static String bytesToStringUTFCustom(List<Byte> bytes) {
-		char[] buffer = new char[bytes.size()];
-		for(int i = 0; i < buffer.length; i++) {
-			int bpos = i;
-			char c = (char)(((bytes.get(bpos)&0xFF)));
-			buffer[i] = c;
-		}
-		return new String(buffer);
+	public void setAcceleration_x(String acceleration_x) {
+		this.acceleration_x = acceleration_x;
+	}
+
+	public String getAcceleration_y() {
+		return acceleration_y;
+	}
+
+	public void setAcceleration_y(String acceleration_y) {
+		this.acceleration_y = acceleration_y;
+	}
+
+	public String getAcceleration_z() {
+		return acceleration_z;
+	}
+
+	public void setAcceleration_z(String acceleration_z) {
+		this.acceleration_z = acceleration_z;
 	}
 
 	private double parseCoordinates(String coordsInMinutesSeconds){
+		System.out.println("COORDS " + coordsInMinutesSeconds);
 		if(coordsInMinutesSeconds.contains("--"))
 			return 0.0;
 		int index = 0;
@@ -282,19 +323,6 @@ public class Telemetry {
 		char sign = coordsInMinutesSeconds.charAt(index+8);	
 
 		return Math.signum(d) * (Math.abs(d) + (m / 60.0) + (s / 3600.0));
-	}
-
-	@Override
-	public String toString() {
-		return "Telemetry [fuel=" + fuel + ", speed=" + speed
-				+ ", revolutions=" + revolutions + ", gyro_x=" + gyro_x
-				+ ", gyro_y=" + gyro_y + ", gyro_z=" + gyro_z + ", lat=" + lat
-				+ ", lon=" + lon + ", drive=" + drive + ", airFlow=" + airFlow
-				+ ", airPressure=" + airPressure + ", airTemperature="
-				+ airTemperature + ", coolingLiqTemp=" + coolingLiqTemp
-				+ ", fuelPressure=" + fuelPressure + ", enviroPressure="
-				+ enviroPressure + ", kmAtAll=" + kmAtAll + ", km=" + km
-				+ ", engineLoad=" + engineLoad + "]";
 	}
 
 }

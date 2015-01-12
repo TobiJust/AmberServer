@@ -15,16 +15,18 @@ public class WebsocketResponse{
 	private Object notification;
 	private byte[] image;
 
-	public static final String LOGIN = "loginACK";
-	public static final String LOGOUT = "logoutACK";
-	public static final String COMMAND = "commandACK";
-	public static final String CARS_RESPONSE = "carsACK";
-	public static final String START_RECORD = "startRecordACK";
-	public static final String STOP_RECORD = "stopRecordACK";
-	public static final String ERROR = "error";
-	public static final String STREAM_STARTED = "streamStarted";
-	public static final String STREAM_CLOSED = "streamClosed";
-	public static final String TELEMETRY = "telemetry";
+	public static final String LOGIN 			= "loginACK";
+	public static final String LOGOUT 			= "logoutACK";
+	public static final String COMMAND 			= "commandACK";
+	public static final String CARS_RESPONSE 	= "carsACK";
+	public static final String START_RECORD 	= "startRecordACK";
+	public static final String STOP_RECORD 		= "stopRecordACK";
+	public static final String ERROR 			= "error";
+	public static final String STREAM_STARTED 	= "streamStarted";
+	public static final String STREAM_CLOSED 	= "streamClosed";
+	public static final String TELEMETRY 		= "telemetry";
+	public static final String SCREENSHOT 		= "screenshotACK";
+	public static final String REGISTER_VEHICLE	= "addCarACK";
 
 	public WebsocketResponse(String id, Object response){
 		this.id = id;

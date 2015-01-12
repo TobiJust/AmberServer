@@ -28,10 +28,7 @@ $(document).ready(function(){
 	});
 	// record a video on server side
 	$(document).on("click", "#btnrecord", function(){
-		if(!amber.media.recording)
-			amber.net.startRecord();
-		else
-			amber.net.stopRecord();
+		amber.media.toggleRecording();
 	});
 	// choose a car for live control
 	$(document).on("click", ".car", function(){
@@ -39,15 +36,38 @@ $(document).ready(function(){
 	});
 	// make a screenshot from the latest image blob sent
 	$(document).on("click","#btnscreenshot",function(){
+		amber.net.reqScreenshot();
+	});
+	// start download of recorded video
+	$(document).on("click","#btndownload",function(){
+		amber.media.downloadVideo();
+		amber.ui.toggleDownloadBtn();
+	});
+	// start download of screenshot
+	$(document).on("click","#btndownloadscreen",function(){
 		amber.media.screenshot();
+		amber.ui.toggleDownloadBtnScreen();
 	});
 	// open commands view
 	$(document).on("click","#btncommands",function(){
-		
+		amber.ui.toggleCommandCenter();
 	});
 	// logout from Amber
 	$(document).on("click","#btnlogout",function(){
 		amber.net.reqLogout();
+	});
+	// choose a command to be sent to the OBU
+	$(document).on("click",".command",function(){
+		amber.net.reqSendCommand($(this).attr("command"));
+		amber.ui.commandPicked();
+	});
+	// add a car to the database
+	$(document).on("click","#btnaddcar",function(){
+		amber.ui.toggleAddCar();
+	});
+	// submit new car obu id to save in DB:
+	$(document).on("click",".newcarsubmit",function(){
+		amber.net.addCar();
 	});
 });
 
